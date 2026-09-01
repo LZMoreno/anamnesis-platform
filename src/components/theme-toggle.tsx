@@ -15,7 +15,12 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <Button variant="ghost" size="icon" className="h-9 w-9 opacity-70">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="min-h-[44px] min-w-[44px] opacity-70"
+        aria-label="Cargando tema"
+      >
         <Sun className="h-4 w-4" />
       </Button>
     );
@@ -30,24 +35,24 @@ export function ThemeToggle() {
   return (
     <Button
       variant="outline"
-      size="sm"
       onClick={cycleTheme}
-      className="h-9 gap-2 px-3 border-border/60 hover:bg-accent/50 text-xs font-medium rounded-full transition-all"
+      className="min-h-[44px] gap-2 px-3 border-border/60 hover:bg-accent/50 text-xs font-medium rounded-full transition-all"
       title="Cambiar tema (Claro / Oscuro / Sistema)"
+      aria-label="Cambiar tema de color"
     >
       {theme === 'dark' ? (
         <>
-          <Moon className="h-3.5 w-3.5 text-indigo-400 animate-in fade-in zoom-in-75 duration-200" />
+          <Moon className="h-4 w-4 text-indigo-400 animate-in fade-in zoom-in-75 duration-200" />
           <span className="hidden sm:inline">Oscuro</span>
         </>
       ) : theme === 'light' ? (
         <>
-          <Sun className="h-3.5 w-3.5 text-amber-500 animate-in fade-in zoom-in-75 duration-200" />
+          <Sun className="h-4 w-4 text-amber-500 animate-in fade-in zoom-in-75 duration-200" />
           <span className="hidden sm:inline">Claro</span>
         </>
       ) : (
         <>
-          <Monitor className="h-3.5 w-3.5 text-muted-foreground animate-in fade-in zoom-in-75 duration-200" />
+          <Monitor className="h-4 w-4 text-muted-foreground animate-in fade-in zoom-in-75 duration-200" />
           <span className="hidden sm:inline">Auto</span>
         </>
       )}

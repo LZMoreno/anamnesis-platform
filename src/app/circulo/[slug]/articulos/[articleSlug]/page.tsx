@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { ArrowLeft, Bookmark, Clock, MessageSquare, Share2 } from 'lucide-react';
+import { notFound } from 'next/navigation';
+import { ArrowLeft, Bookmark, Clock, MessageSquare, Share2, Sparkles, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar } from '@/components/ui/avatar';
@@ -17,6 +18,7 @@ export default function ArticlePage({ params }: ArticlePageProps) {
     title: 'El peso de la palabra no dicha: Apuntes sobre la anamnesis en urgencias',
     circleSlug: params.slug,
     circleName: 'Ensayo Médico',
+    authorId: 'bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb',
     author: 'Dr. Julián Sotomayor',
     authorRole: 'Médico Internista & Ensayista',
     authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
@@ -51,15 +53,15 @@ export default function ArticlePage({ params }: ArticlePageProps) {
   };
 
   return (
-    <div className="pb-20">
+    <div className="w-full max-w-full overflow-x-hidden pb-20">
       {/* Header Navigation */}
-      <div className="border-b border-border/40 bg-muted/20 py-4">
-        <div className="container mx-auto max-w-4xl px-4 flex items-center justify-between text-xs">
+      <div className="border-b border-border/40 bg-muted/20 py-3">
+        <div className="container mx-auto max-w-4xl px-3 sm:px-6 flex items-center justify-between text-xs">
           <Link
             href={`/circulo/${params.slug}`}
-            className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1.5 min-h-[44px] text-muted-foreground hover:text-foreground font-medium transition-colors"
           >
-            <ArrowLeft className="w-3.5 h-3.5" /> Volver al Círculo
+            <ArrowLeft className="w-4 h-4" /> Volver al Círculo
           </Link>
           <Badge variant="outline" className="text-xs">
             {article.circleName}
@@ -68,7 +70,7 @@ export default function ArticlePage({ params }: ArticlePageProps) {
       </div>
 
       {/* Article Body */}
-      <article className="container mx-auto max-w-3xl px-4 pt-12 space-y-8">
+      <article className="container mx-auto max-w-3xl px-3 sm:px-6 pt-8 sm:pt-12 space-y-8">
         <header className="space-y-6">
           <div className="flex flex-wrap gap-1.5">
             {article.tags.map((tag) => (
@@ -83,13 +85,22 @@ export default function ArticlePage({ params }: ArticlePageProps) {
           </h1>
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 border-y border-border/40">
-            <div className="flex items-center gap-3">
-              <Avatar src={article.authorAvatar} fallback="JS" className="w-11 h-11" />
+            <Link
+              href={`/autor/${article.authorId}`}
+              className="flex items-center gap-3 group min-h-[44px]"
+            >
+              <Avatar
+                src={article.authorAvatar}
+                fallback="JS"
+                className="w-11 h-11 border border-border/60 group-hover:border-primary transition-colors"
+              />
               <div>
-                <div className="font-medium text-sm text-foreground">{article.author}</div>
+                <div className="font-serif font-bold text-sm text-foreground group-hover:text-primary transition-colors">
+                  {article.author}
+                </div>
                 <div className="text-xs text-muted-foreground">{article.authorRole}</div>
               </div>
-            </div>
+            </Link>
 
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
@@ -111,17 +122,17 @@ export default function ArticlePage({ params }: ArticlePageProps) {
         </div>
 
         {/* Action Bar */}
-        <div className="flex items-center justify-between pt-8 border-t border-border/40">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-8 border-t border-border/40">
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="gap-2 text-xs">
-              <Bookmark className="w-3.5 h-3.5" /> Guardar en Marcadores
+            <Button variant="outline" className="min-h-[44px] gap-2 text-xs font-medium">
+              <Bookmark className="w-4 h-4" /> Guardar Marcador
             </Button>
-            <Button variant="ghost" size="sm" className="gap-2 text-xs">
-              <Share2 className="w-3.5 h-3.5" /> Compartir
+            <Button variant="ghost" className="min-h-[44px] gap-2 text-xs font-medium">
+              <Share2 className="w-4 h-4" /> Compartir
             </Button>
           </div>
-          <Link href="/agenda">
-            <Button size="sm" variant="secondary" className="text-xs">
+          <Link href="/agenda" className="w-full sm:w-auto">
+            <Button variant="secondary" className="w-full sm:w-auto min-h-[44px] text-xs font-medium">
               Agendar Asesoría con el Autor
             </Button>
           </Link>
@@ -129,10 +140,18 @@ export default function ArticlePage({ params }: ArticlePageProps) {
 
         {/* Author Bio Box */}
         <Card className="bg-muted/30 border-dashed">
-          <CardContent className="p-6 flex items-start gap-4">
-            <Avatar src={article.authorAvatar} fallback="JS" className="w-14 h-14 shrink-0" />
-            <div className="space-y-1">
-              <div className="font-serif font-semibold text-base">{article.author}</div>
+          <CardContent className="p-5 sm:p-6 flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
+            <Avatar src={article.authorAvatar} fallback="JS" className="w-16 h-16 shrink-0" />
+            <div className="space-y-2 flex-1">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <div className="font-serif font-bold text-base">{article.author}</div>
+                <Link
+                  href={`/autor/${article.authorId}`}
+                  className="text-xs text-primary font-medium hover:underline inline-flex items-center gap-1 justify-center sm:justify-start min-h-[44px]"
+                >
+                  <User className="w-3.5 h-3.5" /> Ver Perfil Completo del Autor →
+                </Link>
+              </div>
               <p className="text-xs text-muted-foreground leading-relaxed">{article.authorBio}</p>
             </div>
           </CardContent>
@@ -153,7 +172,7 @@ export default function ArticlePage({ params }: ArticlePageProps) {
               placeholder="Escribe una reflexión o pregunta sobre este manuscrito..."
             />
             <div className="flex justify-end border-t border-border/40 pt-3">
-              <Button size="sm" className="text-xs">
+              <Button className="min-h-[44px] text-xs font-medium">
                 Publicar Comentario
               </Button>
             </div>
@@ -176,7 +195,7 @@ export default function ArticlePage({ params }: ArticlePageProps) {
 
                 {/* Nested Replies */}
                 {c.replies?.map((r) => (
-                  <div key={r.id} className="ml-8 mt-3 rounded-lg border-l-2 border-primary/40 pl-4 py-2 bg-muted/20 space-y-1">
+                  <div key={r.id} className="ml-4 sm:ml-8 mt-3 rounded-lg border-l-2 border-primary/40 pl-3 sm:pl-4 py-2 bg-muted/20 space-y-1">
                     <div className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2">
                         <Avatar src={r.authorAvatar} fallback="JS" className="w-6 h-6" />

@@ -1,7 +1,23 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, Clock, Shield, UserPlus } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  BookOpen,
+  Calendar,
+  Clock,
+  Edit3,
+  Feather,
+  Plus,
+  Shield,
+  Sparkles,
+  Tag,
+  UserPlus,
+  Users,
+} from 'lucide-react';
+import { getCircleBySlug, getArticlesByCircleSlug } from '@/lib/data/mock-db';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
 
@@ -11,185 +27,170 @@ interface CirclePageProps {
   };
 }
 
-const circlesData: Record<string, {
-  name: string;
-  description: string;
-  cover: string;
-  editor: string;
-  editorBio: string;
-  editorAvatar: string;
-  membersCount: number;
-  articles: Array<{
-    title: string;
-    slug: string;
-    excerpt: string;
-    author: string;
-    authorAvatar: string;
-    readingTime: string;
-    status: 'published' | 'draft';
-    tags: string[];
-    date: string;
-  }>;
-}> = {
-  'ensayo-medico': {
-    name: 'Ensayo Médico',
-    description: 'Reflexiones clínicas, fenomenología del cuerpo enfermo, dilemas de bioética y la anamnesis como puente entre ciencia y humanismo.',
-    cover: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=1200&auto=format&fit=crop&q=80',
-    editor: 'Elena Rocafuerte',
-    editorBio: 'Editora en jefe y curadora de ensayos de bioética y narrativa clínica.',
-    editorAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
-    membersCount: 42,
-    articles: [
-      {
-        title: 'El peso de la palabra no dicha: Apuntes sobre la anamnesis en urgencias',
-        slug: 'el-peso-de-la-palabra-no-dicha',
-        excerpt: 'En la guardia nocturna, el silencio de un paciente suele ser más elocuente que cualquier estudio tomográfico. La escucha como el diagnóstico más riguroso.',
-        author: 'Dr. Julián Sotomayor',
-        authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-        readingTime: '7 min',
-        status: 'published',
-        tags: ['Medicina Narrativa', 'Bioética', 'Guardias'],
-        date: '1 de Septiembre, 2026',
-      },
-    ],
-  },
-  'cronica': {
-    name: 'Crónica',
-    description: 'Relatos de no-ficción, periodismo narrativo, cartografías de la memoria urbana y testimonios de la vida cotidiana en América Latina.',
-    cover: 'https://images.unsplash.com/photo-1505686994434-e3cc5abf1330?w=1200&auto=format&fit=crop&q=80',
-    editor: 'Elena Rocafuerte',
-    editorBio: 'Crítica literaria y editora de relatos de no-ficción urbana.',
-    editorAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
-    membersCount: 68,
-    articles: [
-      {
-        title: 'Madrugadas en el tranvía fantasma: Los últimos maquinistas de la estación sur',
-        slug: 'madrugadas-en-el-tranvia-fantasma',
-        excerpt: 'A las cuatro y cuarto de la madrugada, los rieles de la terminal sur emiten un chirrido metálico que parece venir de otro siglo...',
-        author: 'Dr. Julián Sotomayor',
-        authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-        readingTime: '9 min',
-        status: 'published',
-        tags: ['Crónica Urbana', 'Memoria', 'Oficios'],
-        date: '28 de Agosto, 2026',
-      },
-    ],
-  },
-  'resena-literaria': {
-    name: 'Reseña Literaria',
-    description: 'Análisis riguroso, crítica de novedades editoriales y relecturas de obras canónicas hispanoamericanas bajo la mirada contemporánea.',
-    cover: 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=1200&auto=format&fit=crop&q=80',
-    editor: 'Elena Rocafuerte',
-    editorBio: 'Crítica literaria y docente de literatura comparada.',
-    editorAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
-    membersCount: 89,
-    articles: [
-      {
-        title: 'La sintaxis del duelo en la narrativa de María Luisa Bombal',
-        slug: 'la-sintaxis-del-duelo-maria-luisa-bombal',
-        excerpt: 'En La amortajada (1938), María Luisa Bombal instaura una fenomenología sensorial de la muerte donde la difunta observa, escucha y juzga.',
-        author: 'Elena Rocafuerte',
-        authorAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
-        readingTime: '6 min',
-        status: 'published',
-        tags: ['Crítica Literaria', 'Narrativa', 'Estética'],
-        date: '24 de Agosto, 2026',
-      },
-    ],
-  },
-};
-
 export default function CirclePage({ params }: CirclePageProps) {
-  const circle = circlesData[params.slug];
+  const circle = getCircleBySlug(params.slug);
 
   if (!circle) {
     notFound();
   }
 
+  const articles = getArticlesByCircleSlug(params.slug);
+
   return (
-    <div className="pb-16">
-      {/* Circle Banner */}
-      <div className="relative h-64 md:h-80 w-full overflow-hidden bg-muted">
+    <div className="w-full max-w-full overflow-x-hidden pb-20">
+      {/* Circle Banner with Overlay */}
+      <div className="relative h-72 sm:h-80 md:h-96 w-full overflow-hidden bg-muted">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={circle.cover}
+          src={circle.coverUrl}
           alt={circle.name}
-          className="h-full w-full object-cover brightness-[0.7]"
+          className="h-full w-full object-cover brightness-[0.65] transition-transform duration-700 hover:scale-105"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-        
-        <div className="absolute bottom-6 left-0 right-0">
-          <div className="container mx-auto max-w-6xl px-4 flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div className="space-y-2">
-              <Link href="/" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-2">
-                <ArrowLeft className="w-3.5 h-3.5" /> Volver al Inicio
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+
+        <div className="absolute inset-x-0 bottom-0 py-6">
+          <div className="container mx-auto max-w-6xl px-3 sm:px-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div className="space-y-2 max-w-3xl">
+              <Link
+                href="/"
+                className="inline-flex items-center gap-1.5 min-h-[44px] text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" /> Volver al Inicio
               </Link>
-              <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-foreground">
+              
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <Badge className="bg-primary/90 text-primary-foreground text-xs px-2.5 py-0.5">
+                  Círculo Editorial
+                </Badge>
+                <Badge variant="outline" className="bg-background/60 backdrop-blur text-xs">
+                  {circle.membersCount} Miembros
+                </Badge>
+              </div>
+
+              <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-foreground">
                 {circle.name}
               </h1>
-              <p className="max-w-2xl text-sm text-muted-foreground">
+
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-2 sm:line-clamp-none">
                 {circle.description}
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
-              <Link href={`/circulo/${params.slug}/editor`}>
-                <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-                  <Shield className="w-3.5 h-3.5 text-amber-500" />
+            <div className="flex flex-wrap items-center gap-2 pt-2 md:pt-0">
+              <Link href={`/circulo/${params.slug}/editor`} className="w-full sm:w-auto">
+                <Button
+                  variant="outline"
+                  className="w-full sm:w-auto min-h-[44px] gap-2 text-xs font-medium bg-background/80 backdrop-blur hover:bg-accent"
+                >
+                  <Shield className="w-4 h-4 text-amber-500" />
                   Mesa Editorial
                 </Button>
               </Link>
-              <Button size="sm" className="gap-1.5 text-xs">
-                <UserPlus className="w-3.5 h-3.5" />
-                Unirse ({circle.membersCount})
+              <Link href={`/circulo/${params.slug}/editor/members`} className="w-full sm:w-auto">
+                <Button
+                  variant="secondary"
+                  className="w-full sm:w-auto min-h-[44px] gap-2 text-xs font-medium"
+                >
+                  <Users className="w-4 h-4" />
+                  Gestionar Miembros
+                </Button>
+              </Link>
+              <Button
+                className="w-full sm:w-auto min-h-[44px] gap-2 text-xs font-medium bg-primary hover:bg-primary/90"
+              >
+                <UserPlus className="w-4 h-4" />
+                Unirse al Círculo
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Circle Content */}
-      <div className="container mx-auto max-w-6xl px-4 mt-12 grid gap-8 md:grid-cols-3">
-        {/* Main Feed */}
-        <div className="md:col-span-2 space-y-6">
-          <div className="flex items-center justify-between pb-3 border-b border-border/40">
-            <h2 className="font-serif text-xl font-semibold">Artículos Publicados</h2>
-            <span className="text-xs text-muted-foreground">{circle.articles.length} textos</span>
+      {/* Main Grid: Articles + Sidebar */}
+      <div className="container mx-auto max-w-6xl px-3 sm:px-6 mt-8 sm:mt-12 grid gap-8 lg:grid-cols-3">
+        {/* Articles Feed */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/40">
+            <div>
+              <h2 className="font-serif text-xl sm:text-2xl font-bold text-foreground">
+                Manuscritos & Artículos Publicados
+              </h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Textos aprobados y revisados por el comité editorial del círculo.
+              </p>
+            </div>
+            <span className="text-xs text-muted-foreground font-medium">
+              {articles.length} textos disponibles
+            </span>
           </div>
 
-          <div className="space-y-4">
-            {circle.articles.map((article) => (
-              <Link
-                key={article.slug}
-                href={`/circulo/${params.slug}/articulos/${article.slug}`}
-                className="block group"
+          {/* Tags cloud */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-xs text-muted-foreground flex items-center gap-1 mr-1">
+              <Tag className="w-3.5 h-3.5" /> Temas:
+            </span>
+            {circle.tags.map((tag) => (
+              <Badge
+                key={tag}
+                variant="outline"
+                className="text-[11px] font-normal cursor-pointer hover:bg-accent transition"
               >
-                <Card className="transition-all hover:border-primary/40 hover:shadow-sm">
-                  <CardHeader className="space-y-2">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+
+          {/* Articles list */}
+          <div className="space-y-4">
+            {articles.map((article) => (
+              <Link
+                key={article.id}
+                href={`/circulo/${params.slug}/articulos/${article.slug}`}
+                className="group block"
+              >
+                <Card className="transition-all duration-200 hover:border-primary/50 hover:shadow-md group-hover:-translate-y-0.5">
+                  <CardHeader className="p-5 sm:p-6 space-y-2.5">
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> {article.readingTime}
+                      <span className="flex items-center gap-1.5 font-medium">
+                        <Clock className="w-3.5 h-3.5 text-primary" /> {article.readingTimeMin} min de lectura
                       </span>
-                      <span>{article.date}</span>
+                      <span>{article.createdAt}</span>
                     </div>
-                    <CardTitle className="font-serif text-xl group-hover:text-primary transition-colors">
+
+                    <CardTitle className="font-serif text-xl sm:text-2xl font-bold leading-snug group-hover:text-primary transition-colors">
                       {article.title}
                     </CardTitle>
-                    <CardDescription className="text-xs leading-relaxed line-clamp-2">
+
+                    <CardDescription className="text-xs sm:text-sm leading-relaxed line-clamp-3 text-muted-foreground">
                       {article.excerpt}
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="flex items-center justify-between pt-0 text-xs">
-                    <div className="flex items-center gap-2">
-                      <Avatar src={article.authorAvatar} fallback="AU" className="w-6 h-6" />
-                      <span className="text-muted-foreground">{article.author}</span>
-                    </div>
-                    <div className="flex gap-1">
+
+                  <CardContent className="p-5 sm:p-6 pt-0">
+                    <div className="flex flex-wrap gap-1.5 mb-4">
                       {article.tags.map((tag) => (
-                        <span key={tag} className="text-[10px] bg-muted px-2 py-0.5 rounded text-muted-foreground">
+                        <span
+                          key={tag}
+                          className="text-[10px] sm:text-[11px] bg-muted px-2 py-0.5 rounded font-medium text-muted-foreground"
+                        >
                           #{tag}
                         </span>
                       ))}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-3 border-t border-border/40 text-xs">
+                      <div className="flex items-center gap-2.5">
+                        <Avatar
+                          src={article.authorAvatar}
+                          fallback={article.authorName.substring(0, 2).toUpperCase()}
+                          className="w-7 h-7"
+                        />
+                        <span className="font-medium text-foreground">{article.authorName}</span>
+                      </div>
+
+                      <span className="text-primary font-medium flex items-center gap-1 min-h-[44px]">
+                        Leer artículo <ArrowRight className="w-3.5 h-3.5" />
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
@@ -200,33 +201,67 @@ export default function CirclePage({ params }: CirclePageProps) {
 
         {/* Sidebar Info */}
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
+          {/* Editor Info Card with Link to Public Author Profile */}
+          <Card className="shadow-sm">
+            <CardHeader className="pb-3">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Shield className="w-4 h-4 text-amber-500" /> Curaduría y Edición
+                <Shield className="w-4 h-4 text-amber-500" /> Curaduría y Dirección
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-xs">
               <div className="flex items-center gap-3">
-                <Avatar src={circle.editorAvatar} fallback="ER" className="w-12 h-12" />
-                <div>
-                  <div className="font-semibold text-foreground">{circle.editor}</div>
-                  <div className="text-muted-foreground">Editora Responsable</div>
+                <Avatar
+                  src={circle.editorAvatar}
+                  fallback="ER"
+                  className="w-14 h-14 border border-primary/20 shrink-0"
+                />
+                <div className="space-y-0.5">
+                  <div className="font-serif font-bold text-sm text-foreground">
+                    {circle.editorName}
+                  </div>
+                  <div className="text-primary font-medium text-[11px]">
+                    {circle.editorRole}
+                  </div>
+                  <div className="text-muted-foreground text-[10px]">
+                    Curadora de manuscritos
+                  </div>
                 </div>
               </div>
-              <p className="text-muted-foreground leading-relaxed">
+
+              <p className="text-muted-foreground leading-relaxed font-serif">
                 {circle.editorBio}
               </p>
+
+              <Link
+                href={`/autor/${circle.editorId}`}
+                className="block"
+              >
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full min-h-[44px] text-xs gap-1.5 font-medium"
+                >
+                  Ver Perfil y Ensayos del Editor →
+                </Button>
+              </Link>
             </CardContent>
           </Card>
 
-          <Card className="bg-muted/30">
-            <CardHeader>
-              <CardTitle className="text-sm font-semibold">Normas del Círculo</CardTitle>
+          {/* Circle Manifesto Card */}
+          <Card className="bg-muted/20 border-dashed">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-serif font-bold flex items-center gap-2">
+                <Feather className="w-4 h-4 text-primary" /> Manifiesto del Círculo
+              </CardTitle>
             </CardHeader>
-            <CardContent className="text-xs text-muted-foreground space-y-2 leading-relaxed">
-              <p>• Los manuscritos son evaluados por pares antes de su publicación definitiva.</p>
-              <p>• Toda cita clínica resguarda el anonimato estricto según estándares bioéticos.</p>
+            <CardContent className="text-xs text-muted-foreground space-y-3 leading-relaxed">
+              <p>
+                {circle.longDescription || circle.description}
+              </p>
+              <div className="rounded-lg bg-card p-3 border text-[11px] space-y-1">
+                <div className="font-semibold text-foreground">¿Deseas enviar un manuscrito?</div>
+                <p>Las colaboraciones son evaluadas por pares en un plazo máximo de 10 días hábiles.</p>
+              </div>
             </CardContent>
           </Card>
         </div>

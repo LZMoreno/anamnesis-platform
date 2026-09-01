@@ -10,6 +10,7 @@ export type UserRole = 'reader' | 'author' | 'editor';
 export type ArticleStatus = 'draft' | 'published' | 'archived';
 export type CircleMemberRole = 'member' | 'moderator' | 'admin';
 export type BookingStatus = 'confirmed' | 'cancelled';
+export type InvitationStatus = 'pending' | 'accepted' | 'revoked' | 'expired';
 
 export interface Database {
   public: {
@@ -102,6 +103,41 @@ export interface Database {
           user_id?: string;
           role?: CircleMemberRole;
           joined_at?: string;
+        };
+      };
+      circle_invitations: {
+        Row: {
+          id: string;
+          circle_id: string;
+          email: string;
+          role: CircleMemberRole;
+          invited_by: string;
+          token: string;
+          status: InvitationStatus;
+          created_at: string;
+          expires_at: string;
+        };
+        Insert: {
+          id?: string;
+          circle_id: string;
+          email: string;
+          role?: CircleMemberRole;
+          invited_by: string;
+          token?: string;
+          status?: InvitationStatus;
+          created_at?: string;
+          expires_at?: string;
+        };
+        Update: {
+          id?: string;
+          circle_id?: string;
+          email?: string;
+          role?: CircleMemberRole;
+          invited_by?: string;
+          token?: string;
+          status?: InvitationStatus;
+          created_at?: string;
+          expires_at?: string;
         };
       };
       articles: {
@@ -261,6 +297,8 @@ export interface Database {
 
 export type Profile = Database['public']['Tables']['profiles']['Row'];
 export type Circle = Database['public']['Tables']['circles']['Row'];
+export type CircleMember = Database['public']['Tables']['circle_members']['Row'];
+export type CircleInvitation = Database['public']['Tables']['circle_invitations']['Row'];
 export type Article = Database['public']['Tables']['articles']['Row'];
 export type Comment = Database['public']['Tables']['comments']['Row'];
 export type AvailabilitySlot = Database['public']['Tables']['availability_slots']['Row'];
