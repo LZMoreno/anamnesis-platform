@@ -33,7 +33,8 @@ export default function CircleEditorPage({ params }: EditorPageProps) {
 
   const manuscripts = [
     {
-      id: '1',
+      id: '44444444-4444-4444-4444-444444444441',
+      slug: 'el-peso-de-la-palabra-no-dicha',
       title: 'El peso de la palabra no dicha: Apuntes sobre la anamnesis en urgencias',
       author: 'Dr. Julián Sotomayor',
       status: 'published',
@@ -41,7 +42,8 @@ export default function CircleEditorPage({ params }: EditorPageProps) {
       readingTime: '7 min',
     },
     {
-      id: '2',
+      id: '44444444-4444-4444-4444-444444444444',
+      slug: 'anatomia-del-error-medico',
       title: 'Borrador: La anatomía del error médico y el tabú hospitalario',
       author: 'Dr. Julián Sotomayor',
       status: 'draft',
@@ -86,11 +88,13 @@ export default function CircleEditorPage({ params }: EditorPageProps) {
               </p>
             </div>
 
-            <Button
-              className="min-h-[44px] gap-2 text-xs font-medium bg-primary hover:bg-primary/90 self-start sm:self-auto"
-            >
-              <Plus className="w-4 h-4" /> Redactar Nuevo Manuscrito
-            </Button>
+            <Link href="/editor/nuevo" className="self-start sm:self-auto">
+              <Button
+                className="min-h-[44px] gap-2 text-xs font-medium bg-primary hover:bg-primary/90"
+              >
+                <Plus className="w-4 h-4" /> Redactar en TipTap
+              </Button>
+            </Link>
           </div>
 
           {/* Sub Navigation */}
@@ -204,13 +208,15 @@ export default function CircleEditorPage({ params }: EditorPageProps) {
                   </div>
 
                   <div className="flex items-center gap-2 self-end sm:self-auto">
-                    <Button
-                      variant="outline"
-                      className="min-h-[44px] text-xs gap-1.5 font-medium px-3"
-                    >
-                      <Edit className="w-4 h-4" /> Editar
-                    </Button>
-                    <Link href={`/circulo/${params.slug}/articulos/el-peso-de-la-palabra-no-dicha`}>
+                    <Link href={`/editor/${item.slug}`}>
+                      <Button
+                        variant="outline"
+                        className="min-h-[44px] text-xs gap-1.5 font-medium px-3"
+                      >
+                        <Edit className="w-4 h-4 text-primary" /> Abrir en TipTap
+                      </Button>
+                    </Link>
+                    <Link href={`/circulo/${params.slug}/articulos/${item.slug}`}>
                       <Button
                         variant="ghost"
                         className="min-h-[44px] text-xs gap-1.5 font-medium px-3"

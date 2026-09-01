@@ -12,6 +12,7 @@ import {
   Layers,
   LogIn,
   Menu,
+  PenTool,
   Sparkles,
   User,
   Users,
@@ -42,6 +43,11 @@ export function Navbar() {
       label: 'Autor Destacado',
       icon: User,
     },
+    {
+      href: '/editor/nuevo',
+      label: 'Editor TipTap',
+      icon: PenTool,
+    },
   ];
 
   return (
@@ -65,7 +71,7 @@ export function Navbar() {
           <nav className="hidden lg:flex items-center gap-1">
             {navLinks.map((link) => {
               const Icon = link.icon;
-              const isActive = pathname === link.href;
+              const isActive = pathname === link.href || (link.href === '/editor/nuevo' && pathname.startsWith('/editor'));
               return (
                 <Link
                   key={link.href}
@@ -92,13 +98,13 @@ export function Navbar() {
           </div>
           <ThemeToggle />
 
-          <Link href="/login" className="hidden sm:inline-block">
+          <Link href="/editor/nuevo" className="hidden sm:inline-block">
             <Button
-              variant="ghost"
-              className="min-h-[44px] gap-1.5 text-xs font-medium px-3"
+              variant="outline"
+              className="min-h-[44px] gap-1.5 text-xs font-medium px-3 border-primary/40 text-primary hover:bg-primary/10"
             >
-              <LogIn className="w-4 h-4" />
-              <span>Ingresar</span>
+              <PenTool className="w-4 h-4" />
+              <span>Redactar</span>
             </Button>
           </Link>
 
@@ -110,7 +116,7 @@ export function Navbar() {
               className="min-h-[44px] gap-1.5 text-xs font-medium bg-primary hover:bg-primary/90 px-3.5"
             >
               <Edit3 className="w-4 h-4" />
-              <span>Panel Editor</span>
+              <span>Mesa Editorial</span>
             </Button>
           </Link>
 
@@ -143,7 +149,7 @@ export function Navbar() {
           <nav className="space-y-1">
             {navLinks.map((link) => {
               const Icon = link.icon;
-              const isActive = pathname === link.href;
+              const isActive = pathname === link.href || (link.href === '/editor/nuevo' && pathname.startsWith('/editor'));
               return (
                 <Link
                   key={link.href}
@@ -166,19 +172,19 @@ export function Navbar() {
           </nav>
 
           <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/40">
-            <Link href="/login" className="w-full">
+            <Link href="/editor/nuevo" className="w-full">
               <Button
                 variant="outline"
                 className="w-full min-h-[44px] gap-2 text-xs font-medium"
               >
-                <LogIn className="w-4 h-4" /> Ingresar
+                <PenTool className="w-4 h-4" /> Redactar
               </Button>
             </Link>
             <Link href="/circulo/cronica/editor" className="w-full">
               <Button
                 className="w-full min-h-[44px] gap-2 text-xs font-medium bg-primary hover:bg-primary/90"
               >
-                <Edit3 className="w-4 h-4" /> Panel Editor
+                <Edit3 className="w-4 h-4" /> Mesa Editorial
               </Button>
             </Link>
           </div>

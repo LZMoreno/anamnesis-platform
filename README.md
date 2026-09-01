@@ -1,12 +1,20 @@
 # Anamnesis — Plataforma Literaria y Ensayística
 
-Arquitectura base y sistema de gestión de círculos construidos con **Next.js 14+ (App Router)**, **TypeScript**, **Tailwind CSS**, **Shadcn/UI** y **Supabase** (PostgreSQL, Auth, RLS y RBAC).
+Arquitectura base, sistema de gestión de círculos y editor enriquecido con **Next.js 14+ (App Router)**, **TypeScript**, **Tailwind CSS**, **Shadcn/UI**, **TipTap** y **Supabase** (PostgreSQL, Auth, RLS y RBAC).
 
 ---
 
 ## 🌟 Características Implementadas
 
-1. **Esquema de Base de Datos PostgreSQL en Supabase**:
+1. **Editor de Artículos con TipTap (`/editor/[id]`)**:
+   - Formato enriquecido: Encabezados H1-H3, negrita, cursiva, tachado, citas (`blockquote`), listas, enlaces y bloques de código seguros.
+   - **Sanitización estricta al pegar desde Word / Google Docs**: Limpieza con **DOMPurify**, prevención contra XSS y conversión segura de fragmentos de código.
+   - **Rendimiento optimizado para textos extensos (+9,000 palabras y 30+ imágenes)**: Debounce de serialización de 250ms y carga diferida (`loading="lazy"`).
+   - **Autoguardado cada 5 segundos**: Indicador visual dinámico (*"Guardando..."*, *"Guardado a las HH:MM:SS"*, *"Cambios pendientes..."*).
+   - **Buscador de Libros de Open Library API**: Modal de búsqueda que inserta fichas de citas bibliográficas estructuradas con portada, autor y año.
+   - **Vista Previa de Publicación**: Toggle para alternar entre modo edición y vista previa editorial completa.
+
+2. **Esquema de Base de Datos PostgreSQL en Supabase**:
    - `profiles`: Vinculada a `auth.users` mediante triggers automáticos con roles (`'reader'`, `'author'`, `'editor'`).
    - `circles`: Círculos editoriales temáticos con slug único y editor responsable.
    - `circle_members`: Membresías de usuarios en círculos con roles (`member`, `moderator`, `admin`).
@@ -14,32 +22,21 @@ Arquitectura base y sistema de gestión de círculos construidos con **Next.js 1
    - `articles`: Ensayos y crónicas con estado (`'draft'`, `'published'`, `'archived'`), etiquetas, tiempo de lectura y contenido estructurado.
    - `comments`: Sistema de comentarios anidados (hilos de respuesta jerárquicos).
    - `bookmarks`: Marcadores de lectura privados por usuario.
-   - `availability_slots`: Bloques de tiempo de autores para asesorías y tutorías.
-   - `bookings`: Reservas confirmadas de lectores con autores.
-
-2. **Políticas de Seguridad Row Level Security (RLS)**:
-   - Protección a nivel de fila en todas las tablas.
-   - Solo el `editor_id` del círculo o co-editores administradores pueden invitar autores (`circle_invitations`), cambiar roles o revocar membresías en su círculo (`circle_members`).
-   - Borradores ocultos para lectores no autorizados.
+   - `availability_slots` & `bookings`: Bloques de tiempo de autores y reservas de lectores.
 
 3. **Rutas Dinámicas & Perfiles Públicos**:
    - `/circulo/[slug]`: Portada, manifiesto, ficha de curaduría del editor y lista de artículos con filtros por etiquetas.
    - `/autor/[id]`: Perfil público del autor con biografía, zona horaria, métricas de lectura, listado de todas sus obras publicadas y enlace para agendar tutorías.
    - `/circulo/[slug]/articulos/[articleSlug]`: Lector inmersivo con comentarios anidados y ficha de autor.
+   - `/circulo/[slug]/editor/members`: Panel de gestión de miembros e invitaciones con políticas RLS.
 
-4. **Panel de Gestión del Editor (`/circulo/[slug]/editor/members`)**:
-   - Formulario para invitar autores por correo electrónico con selección de rol (`member`, `moderator`, `admin`).
-   - Gestión interactiva de miembros activos: modificar roles o revocar accesos.
-   - Bandeja de invitaciones pendientes con opción de reenviar o cancelar.
-
-5. **Adaptabilidad Móvil y UI Táctil**:
+4. **Adaptabilidad Móvil y UI Táctil**:
    - Todos los botones, enlaces y campos interactivos tienen un tamaño táctil mínimo de **$44\text{px}$** (`min-h-[44px]`).
    - Menú hamburguesa accesible en dispositivos móviles ($< 1024\text{px}$).
    - Navegación fluida y adaptada desde **$320\text{px}$** sin scroll horizontal.
 
-6. **Tema Claro / Oscuro sin FOUC**:
+5. **Tema Claro / Oscuro sin FOUC**:
    - Configurado con `next-themes` y `suppressHydrationWarning`.
-   - Variables CSS semánticas en Tailwind inspiradas en Shadcn UI.
 
 ---
 
@@ -82,7 +79,7 @@ git init
 git add .
 
 # 3. Crear commit
-git commit -m "feat: circles system, public author profiles, editor members panel with RLS and mobile touch targets"
+git commit -m "feat(editor): implement TipTap article editor with Word sanitization, Open Library book citations and autosave"
 
 # 4. Establecer la rama principal como 'main'
 git branch -M main

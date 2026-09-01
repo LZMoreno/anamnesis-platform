@@ -50,13 +50,22 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // RBAC: Protección estricta de rutas de edición de círculos (/circulo/[slug]/editor/*)
-  if (pathname.includes('/editor')) {
+  // 1. RBAC: Mesa Editorial del Círculo (/circulo/[slug]/editor/*) -> Requiere rol 'editor'
+  if (pathname.includes('/circulo/') && pathname.includes('/editor')) {
     const isEditor = currentRole === 'editor';
     if (!isEditor) {
-      // Redirigir a 403 estilizado sin filtrar metadata del círculo
       const forbiddenUrl = new URL('/403', request.url);
-      forbiddenUrl.searchParams.set('reason', 'unauthorized_editor_access');
+      forbiddenUrl.searchParams.set('reason', 'unauthorized_circle_editor');
+      return NextResponse.rewrite(forbiddenUrl, { status: 403 });
+    }
+  }
+
+  // 2. RBAC: Redacción y Edición de Artículos (/editor/*) -> Permitido para 'author' y 'editor'
+  if (pathname.startsWith('/editor')) {
+    const canWrite = currentRole === 'author' || currentRole === 'editor';
+    if (!canWrite) {
+      const forbiddenUrl = new URL('/403', request.url);
+      forbiddenUrl.searchParams.set('reason', 'unauthorized_author_access');
       return NextResponse.rewrite(forbiddenUrl, { status: 403 });
     }
   }
