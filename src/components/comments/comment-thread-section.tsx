@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import {
   AlertCircle,
   CheckCircle2,
@@ -8,6 +9,7 @@ import {
   Eye,
   EyeOff,
   Loader2,
+  LogIn,
   MessageSquare,
   Radio,
   Reply,
@@ -16,12 +18,14 @@ import {
   ShieldAlert,
   Sparkles,
   User,
+  UserPlus,
 } from 'lucide-react';
 import {
   CommentItem,
   getCommentsByArticleSlug,
   addCommentMock,
   toggleModerateCommentMock,
+  INITIAL_AUTHORS,
 } from '@/lib/data/mock-db';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
@@ -49,6 +53,14 @@ export function CommentThreadSection({
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [realtimeActive, setRealtimeActive] = React.useState(true);
   const [toastMessage, setToastMessage] = React.useState<string | null>(null);
+  const [activeAccountRole, setActiveAccountRole] = React.useState<string>(userRole);
+
+  React.useEffect(() => {
+    const match = document.cookie.match(/anamnesis_demo_role=([^;]+)/);
+    if (match) {
+      setActiveAccountRole(match[1]);
+    }
+  }, [userRole]);
 
   // Cargar comentarios
   const loadComments = () => {
@@ -59,7 +71,7 @@ export function CommentThreadSection({
     loadComments();
   }, [articleSlug]);
 
-  // Simulación de Supabase Realtime Channel
+  // Simulación de canal Supabase Realtime
   React.useEffect(() => {
     const channelName = `realtime:comments:${articleSlug}`;
     console.log(`[Supabase Realtime] Conectado al canal ${channelName}`);
@@ -75,10 +87,46 @@ export function CommentThreadSection({
     setTimeout(() => setToastMessage(null), 4000);
   };
 
+  // Obtener identidad del usuario logueado actualmente
+  const getCurrentUser = () => {
+    switch (activeAccountRole) {
+      case 'editor':
+        return {
+          id: 'cccccccc-3333-4333-c333-cccccccccccc',
+          name: 'Elena Rocafuerte',
+          avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
+          role: 'editor' as const,
+          roleLabel: 'Editora de Círculo',
+        };
+      case 'author':
+        return {
+          id: 'bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb',
+          name: 'Dr. Julián Sotomayor',
+          avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+          role: 'author' as const,
+          roleLabel: 'Médico Ensayista',
+        };
+      case 'reader':
+        return {
+          id: 'aaaaaaaa-1111-4111-a111-aaaaaaaaaaaa',
+          name: 'Sofía Valenzuela',
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+          role: 'reader' as const,
+          roleLabel: 'Lectora & Investigadora',
+        };
+      default:
+        return null;
+    }
+  };
+
+  const currentUser = getCurrentUser();
+  const isGuest = activeAccountRole === 'guest' || !currentUser;
+  const isEditor = activeAccountRole === 'editor';
+
   // 1. PUBLICAR COMENTARIO PRINCIPAL
   const handlePostMainComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!mainCommentInput.trim()) return;
+    if (!mainCommentInput.trim() || isGuest || !currentUser) return;
 
     setIsSubmitting(true);
 
@@ -86,12 +134,7 @@ export function CommentThreadSection({
       articleSlug,
       mainCommentInput.trim(),
       null,
-      {
-        id: 'aaaaaaaa-1111-4111-a111-aaaaaaaaaaaa',
-        name: 'Sofía Valenzuela',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-        role: userRole,
-      }
+      currentUser
     );
 
     // Notificar al autor vía API de Resend
@@ -104,7 +147,7 @@ export function CommentThreadSection({
         circleSlug,
         authorEmail,
         authorName: 'Autor del Manuscrito',
-        commenterName: 'Sofía Valenzuela',
+        commenterName: currentUser.name,
         commentContent: mainCommentInput.trim(),
       }),
     }).catch((e) => console.warn('Email notification error:', e));
@@ -112,13 +155,13 @@ export function CommentThreadSection({
     loadComments();
     setMainCommentInput('');
     setIsSubmitting(false);
-    showToast('¡Comentario publicado en tiempo real y notificado al autor!');
+    showToast(`¡Comentario publicado como ${currentUser.name} en tiempo real!`);
   };
 
   // 2. PUBLICAR RESPUESTA ANIDADA (THREADED REPLY)
   const handlePostReply = async (parentId: string, e: React.FormEvent) => {
     e.preventDefault();
-    if (!replyInput.trim()) return;
+    if (!replyInput.trim() || isGuest || !currentUser) return;
 
     setIsSubmitting(true);
 
@@ -126,15 +169,7 @@ export function CommentThreadSection({
       articleSlug,
       replyInput.trim(),
       parentId,
-      {
-        id: userRole === 'editor' ? 'cccccccc-3333-4333-c333-cccccccccccc' : 'aaaaaaaa-1111-4111-a111-aaaaaaaaaaaa',
-        name: userRole === 'editor' ? 'Elena Rocafuerte (Editora)' : 'Sofía Valenzuela',
-        avatar:
-          userRole === 'editor'
-            ? 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150'
-            : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-        role: userRole,
-      }
+      currentUser
     );
 
     loadComments();
@@ -157,8 +192,6 @@ export function CommentThreadSection({
     }
   };
 
-  const isEditor = userRole === 'editor';
-
   return (
     <section className="pt-10 space-y-6">
       {/* Section Header with Realtime Indicator */}
@@ -177,7 +210,7 @@ export function CommentThreadSection({
           )}
 
           {isEditor && (
-            <Badge className="bg-primary/20 text-primary border-primary/40 text-[10px] gap-1">
+            <Badge className="bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40 text-[10px] gap-1">
               <Shield className="w-3 h-3" /> Modo Moderador (Editor)
             </Badge>
           )}
@@ -192,56 +225,71 @@ export function CommentThreadSection({
         </div>
       )}
 
-      {/* Main Comment Input Box */}
-      <form onSubmit={handlePostMainComment} className="space-y-3 rounded-2xl border bg-card p-4 sm:p-5 shadow-sm">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-border/40 text-xs text-muted-foreground">
-          <Avatar
-            src={
-              isEditor
-                ? 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150'
-                : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'
-            }
-            fallback="US"
-            className="w-6 h-6 border"
+      {/* Main Comment Input Box or Guest Login Prompt */}
+      {isGuest ? (
+        <div className="rounded-2xl border border-dashed border-border/80 bg-muted/20 p-6 text-center space-y-3">
+          <MessageSquare className="w-8 h-8 mx-auto text-muted-foreground opacity-60" />
+          <div className="space-y-1">
+            <h4 className="font-serif font-bold text-base text-foreground">
+              Únete a la conversación comunitaria
+            </h4>
+            <p className="text-xs text-muted-foreground max-w-md mx-auto">
+              Para publicar comentarios o responder en los hilos con tu identidad verificada, por favor inicia sesión o crea una cuenta.
+            </p>
+          </div>
+          <Link href="/login">
+            <Button className="min-h-[44px] gap-2 text-xs font-semibold bg-primary hover:bg-primary/90 px-5">
+              <LogIn className="w-4 h-4" /> Iniciar Sesión para Comentar
+            </Button>
+          </Link>
+        </div>
+      ) : (
+        <form onSubmit={handlePostMainComment} className="space-y-3 rounded-2xl border bg-card p-4 sm:p-5 shadow-sm">
+          <div className="flex items-center gap-2.5 pb-2 border-b border-border/40 text-xs text-muted-foreground">
+            <Avatar
+              src={currentUser.avatar}
+              fallback={currentUser.name.substring(0, 2).toUpperCase()}
+              className="w-6 h-6 border"
+            />
+            <span>
+              Publicando como:{' '}
+              <strong className="text-foreground">
+                {currentUser.name} ({currentUser.roleLabel})
+              </strong>
+            </span>
+          </div>
+
+          <textarea
+            value={mainCommentInput}
+            onChange={(e) => setMainCommentInput(e.target.value)}
+            placeholder="Escribe una reflexión, duda metodológica o pregunta sobre la tesis del manuscrito..."
+            rows={3}
+            className="w-full bg-transparent text-xs sm:text-sm font-serif resize-none focus:outline-none placeholder:text-muted-foreground leading-relaxed"
+            required
           />
-          <span>
-            Publicando como:{' '}
-            <strong className="text-foreground">
-              {isEditor ? 'Elena Rocafuerte (Editora)' : 'Sofía Valenzuela (Lector)'}
-            </strong>
-          </span>
-        </div>
 
-        <textarea
-          value={mainCommentInput}
-          onChange={(e) => setMainCommentInput(e.target.value)}
-          placeholder="Escribe una reflexión, duda metodológica o pregunta sobre la tesis del manuscrito..."
-          rows={3}
-          className="w-full bg-transparent text-xs sm:text-sm font-serif resize-none focus:outline-none placeholder:text-muted-foreground leading-relaxed"
-          required
-        />
-
-        <div className="flex items-center justify-between pt-2 border-t border-border/40">
-          <span className="text-[11px] text-muted-foreground hidden sm:inline">
-            Respeta las pautas comunitarias y el rigor bioético.
-          </span>
-          <Button
-            type="submit"
-            disabled={isSubmitting || !mainCommentInput.trim()}
-            className="min-h-[44px] text-xs font-semibold gap-1.5 bg-primary hover:bg-primary/90 px-4"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" /> Publicando...
-              </>
-            ) : (
-              <>
-                <Send className="w-3.5 h-3.5" /> Publicar Reflexión
-              </>
-            )}
-          </Button>
-        </div>
-      </form>
+          <div className="flex items-center justify-between pt-2 border-t border-border/40">
+            <span className="text-[11px] text-muted-foreground hidden sm:inline">
+              Respeta las pautas comunitarias y el rigor bioético.
+            </span>
+            <Button
+              type="submit"
+              disabled={isSubmitting || !mainCommentInput.trim()}
+              className="min-h-[44px] text-xs font-semibold gap-1.5 bg-primary hover:bg-primary/90 px-4"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Publicando...
+                </>
+              ) : (
+                <>
+                  <Send className="w-3.5 h-3.5" /> Publicar Reflexión
+                </>
+              )}
+            </Button>
+          </div>
+        </form>
+      )}
 
       {/* Threaded Comments List */}
       <div className="space-y-4 pt-2">
@@ -270,7 +318,7 @@ export function CommentThreadSection({
                       <div className="flex items-center gap-1.5">
                         <span className="font-serif font-bold text-foreground">{comment.userName}</span>
                         {comment.userRole === 'author' && (
-                          <Badge className="text-[10px] py-0 px-1.5 bg-primary/10 text-primary border-primary/30">
+                          <Badge className="text-[10px] py-0 px-1.5 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30">
                             Autor
                           </Badge>
                         )}
@@ -330,7 +378,7 @@ export function CommentThreadSection({
                 )}
 
                 {/* Reply Trigger Button */}
-                {!isHidden && (
+                {!isHidden && !isGuest && (
                   <div className="flex justify-end pt-1">
                     <Button
                       variant="ghost"
@@ -344,13 +392,13 @@ export function CommentThreadSection({
                 )}
 
                 {/* Inline Reply Form */}
-                {replyingToId === comment.id && (
+                {replyingToId === comment.id && !isGuest && currentUser && (
                   <form
                     onSubmit={(e) => handlePostReply(comment.id, e)}
                     className="ml-2 sm:ml-10 p-3 rounded-xl border border-primary/30 bg-muted/30 space-y-2.5 animate-in fade-in duration-150"
                   >
                     <div className="text-[11px] font-semibold text-primary flex items-center gap-1">
-                      <CornerDownRight className="w-3.5 h-3.5" /> Respondiendo a {comment.userName}:
+                      <CornerDownRight className="w-3.5 h-3.5" /> Respondiendo como {currentUser.name}:
                     </div>
                     <textarea
                       value={replyInput}
@@ -400,7 +448,7 @@ export function CommentThreadSection({
                               <Avatar src={reply.userAvatar} fallback="US" className="w-6 h-6 border" />
                               <span className="font-serif font-bold text-foreground">{reply.userName}</span>
                               {reply.userRole === 'author' && (
-                                <Badge className="text-[9px] py-0 px-1 bg-primary/10 text-primary border-primary/30">
+                                <Badge className="text-[9px] py-0 px-1 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30">
                                   Autor
                                 </Badge>
                               )}

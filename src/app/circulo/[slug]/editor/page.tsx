@@ -4,22 +4,37 @@ import * as React from 'react';
 import Link from 'next/link';
 import { notFound, useRouter } from 'next/navigation';
 import {
+  AlertCircle,
   ArrowLeft,
+  BarChart3,
+  BookOpen,
   CheckCircle2,
   Clock,
   Edit,
   Eye,
   FileText,
   Lock,
+  MessageSquare,
+  MessageSquareWarning,
   Plus,
+  Radio,
+  Reply,
   Shield,
   ShieldAlert,
+  Sparkles,
+  TrendingUp,
   Users,
 } from 'lucide-react';
-import { getCircleBySlug, INITIAL_MEMBERS } from '@/lib/data/mock-db';
+import {
+  getCircleBySlug,
+  INITIAL_MEMBERS,
+  INITIAL_ARTICLES,
+  INITIAL_COMMENTS,
+} from '@/lib/data/mock-db';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar } from '@/components/ui/avatar';
 
 interface EditorPageProps {
   params: {
@@ -31,6 +46,7 @@ export default function CircleEditorPage({ params }: EditorPageProps) {
   const router = useRouter();
   const circle = getCircleBySlug(params.slug);
   const [currentRole, setCurrentRole] = React.useState<string | null>(null);
+  const [activeTab, setActiveTab] = React.useState<'overview' | 'manuscripts' | 'comments'>('overview');
 
   React.useEffect(() => {
     const match = document.cookie.match(/anamnesis_demo_role=([^;]+)/);
@@ -42,7 +58,7 @@ export default function CircleEditorPage({ params }: EditorPageProps) {
     notFound();
   }
 
-  // Estricto Guard de Rol: Si es Lector o Autor no editor, bloquear acceso totalmente
+  // Estricto Guard de Rol: Si es Lector o Invitado, bloquear acceso totalmente
   if (currentRole !== null && currentRole !== 'editor') {
     return (
       <div className="w-full max-w-full overflow-x-hidden pb-20">
@@ -64,8 +80,8 @@ export default function CircleEditorPage({ params }: EditorPageProps) {
             <div className="font-semibold text-foreground flex items-center gap-1.5">
               <Lock className="w-4 h-4 text-amber-500" /> Política de Seguridad RLS:
             </div>
-            <p>• Los lectores nunca tienen acceso a la cola de borradores ni a la gestión de membresías.</p>
-            <p>• Para ingresar como editor, selecciona el rol <strong>Editor</strong> en el simulador superior.</p>
+            <p>• Los lectores nunca tienen acceso al panel de métricas ni a la gestión de membresías.</p>
+            <p>• Para ingresar como editor, inicia sesión con la cuenta de <strong>Elena Rocafuerte (Editor)</strong>.</p>
           </div>
 
           <div className="flex justify-center gap-3 pt-2">
@@ -80,31 +96,56 @@ export default function CircleEditorPage({ params }: EditorPageProps) {
     );
   }
 
+  const circleArticles = INITIAL_ARTICLES.filter((a) => a.circleSlug === params.slug);
+  const publishedCount = circleArticles.filter((a) => a.status === 'published').length;
+  const draftCount = circleArticles.filter((a) => a.status === 'draft').length || 1;
+  const totalReads = 1420;
+  const unattendedCommentsCount = INITIAL_COMMENTS.filter((c) => !c.replies || c.replies.length === 0).length;
   const membersCount = (INITIAL_MEMBERS[params.slug] || []).length;
 
-  const manuscripts = [
+  // Gráfica de lecturas semanales (Compatible con Dark Mode)
+  const weeklyTraffic = [
+    { day: 'Lun', reads: 140, comments: 4 },
+    { day: 'Mar', reads: 220, comments: 8 },
+    { day: 'Mié', reads: 310, comments: 12 },
+    { day: 'Jue', reads: 280, comments: 9 },
+    { day: 'Vie', reads: 450, comments: 15 },
+    { day: 'Sáb', reads: 520, comments: 18 },
+    { day: 'Dom', reads: 380, comments: 11 },
+  ];
+
+  const maxReads = Math.max(...weeklyTraffic.map((d) => d.reads));
+
+  // Artículos más leídos del círculo
+  const topReadArticles = [
     {
-      id: '44444444-4444-4444-4444-444444444441',
-      slug: 'el-peso-de-la-palabra-no-dicha',
       title: 'El peso de la palabra no dicha: Apuntes sobre la anamnesis en urgencias',
       author: 'Dr. Julián Sotomayor',
-      status: 'published',
-      date: '01/09/2026',
+      reads: 890,
+      comments: 6,
       readingTime: '7 min',
+      slug: 'el-peso-de-la-palabra-no-dicha',
     },
     {
-      id: '44444444-4444-4444-4444-444444444444',
-      slug: 'anatomia-del-error-medico',
-      title: 'Borrador: La anatomía del error médico y el tabú hospitalario',
+      title: 'Crónica del tercer turno: El silencio en el pabellón de traumatología',
+      author: 'Elena Rocafuerte',
+      reads: 340,
+      comments: 4,
+      readingTime: '6 min',
+      slug: 'cronica-del-tercer-turno',
+    },
+    {
+      title: 'La invención de la enfermedad: Foucault revisitado en la clínica',
       author: 'Dr. Julián Sotomayor',
-      status: 'draft',
-      date: '31/08/2026',
+      reads: 190,
+      comments: 2,
       readingTime: '5 min',
+      slug: 'la-invencion-de-la-enfermedad',
     },
   ];
 
   return (
-    <div className="w-full max-w-full overflow-x-hidden pb-20">
+    <div className="w-full max-w-full overflow-x-hidden pb-24">
       {/* Top Breadcrumb Header */}
       <div className="border-b border-border/40 bg-muted/20 py-3">
         <div className="container mx-auto max-w-6xl px-3 sm:px-6 flex items-center justify-between text-xs">
@@ -126,39 +167,52 @@ export default function CircleEditorPage({ params }: EditorPageProps) {
         <div className="space-y-4 pb-4 border-b border-border/40">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="font-serif text-2xl sm:text-3xl font-bold">
-                  Mesa Editorial: {circle.name}
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="font-serif text-2xl sm:text-3xl font-bold text-foreground">
+                  Panel Editorial: {circle.name}
                 </h1>
                 <Badge className="bg-amber-600 hover:bg-amber-700 text-white gap-1 text-[11px]">
-                  <Shield className="w-3 h-3" /> Editor
+                  <Shield className="w-3 h-3" /> Mesa Directiva
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Gestión de manuscritos, revisión de borradores y control de publicaciones.
+                Supervisión analítica de publicaciones, borradores, lecturas y moderación comunitaria.
               </p>
             </div>
 
-            <Link href="/editor/nuevo" className="self-start sm:self-auto">
-              <Button
-                className="min-h-[44px] gap-2 text-xs font-medium bg-primary hover:bg-primary/90"
-              >
-                <Plus className="w-4 h-4" /> Redactar en TipTap
-              </Button>
-            </Link>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Link href="/editor/nuevo">
+                <Button className="min-h-[44px] gap-2 text-xs font-medium bg-primary hover:bg-primary/90">
+                  <Plus className="w-4 h-4" /> Redactar Manuscrito
+                </Button>
+              </Link>
+            </div>
           </div>
 
           {/* Sub Navigation */}
-          <div className="flex items-center gap-2 pt-2">
-            <Link href={`/circulo/${params.slug}/editor`}>
-              <Button
-                variant="secondary"
-                className="min-h-[44px] gap-2 text-xs font-semibold bg-accent text-accent-foreground shadow-sm"
-              >
-                <FileText className="w-4 h-4 text-primary" />
-                Cola de Manuscritos
-              </Button>
-            </Link>
+          <div className="flex items-center gap-2 pt-2 overflow-x-auto no-scrollbar">
+            <Button
+              variant={activeTab === 'overview' ? 'secondary' : 'ghost'}
+              onClick={() => setActiveTab('overview')}
+              className={`min-h-[44px] gap-2 text-xs font-semibold ${
+                activeTab === 'overview' ? 'bg-accent text-accent-foreground shadow-sm' : 'text-muted-foreground'
+              }`}
+            >
+              <BarChart3 className="w-4 h-4 text-primary" />
+              Métricas & Tráfico
+            </Button>
+
+            <Button
+              variant={activeTab === 'manuscripts' ? 'secondary' : 'ghost'}
+              onClick={() => setActiveTab('manuscripts')}
+              className={`min-h-[44px] gap-2 text-xs font-medium ${
+                activeTab === 'manuscripts' ? 'bg-accent text-accent-foreground shadow-sm' : 'text-muted-foreground'
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              Cola de Manuscritos ({circleArticles.length})
+            </Button>
+
             <Link href={`/circulo/${params.slug}/editor/members`}>
               <Button
                 variant="ghost"
@@ -171,63 +225,202 @@ export default function CircleEditorPage({ params }: EditorPageProps) {
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Card>
-            <CardHeader className="p-5 pb-2">
-              <CardDescription className="text-xs">Artículos Publicados</CardDescription>
-              <CardTitle className="text-2xl sm:text-3xl font-serif font-bold text-foreground">
-                1
-              </CardTitle>
+        {/* 1. Dashboard de Métricas Clave (4 Cards) */}
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+          <Card className="p-4 sm:p-5">
+            <CardHeader className="p-0 pb-2 flex flex-row items-center justify-between">
+              <CardDescription className="text-xs font-medium">Publicados</CardDescription>
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
             </CardHeader>
-            <CardContent className="p-5 pt-0">
-              <span className="text-[11px] text-muted-foreground">Visibles a todos los lectores</span>
+            <CardContent className="p-0">
+              <div className="text-2xl sm:text-3xl font-serif font-bold text-foreground">
+                {publishedCount}
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1">Ensayos en línea</p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="p-5 pb-2">
-              <CardDescription className="text-xs">Borradores en Revisión</CardDescription>
-              <CardTitle className="text-2xl sm:text-3xl font-serif font-bold text-amber-500">
-                1
-              </CardTitle>
+          <Card className="p-4 sm:p-5">
+            <CardHeader className="p-0 pb-2 flex flex-row items-center justify-between">
+              <CardDescription className="text-xs font-medium">Borradores Pendientes</CardDescription>
+              <Clock className="w-4 h-4 text-amber-500" />
             </CardHeader>
-            <CardContent className="p-5 pt-0">
-              <span className="text-[11px] text-muted-foreground">Privado solo para autores y editores</span>
+            <CardContent className="p-0">
+              <div className="text-2xl sm:text-3xl font-serif font-bold text-amber-500">
+                {draftCount}
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1">En revisión editorial</p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="p-5 pb-2">
-              <CardDescription className="text-xs">Membresías del Círculo</CardDescription>
-              <CardTitle className="text-2xl sm:text-3xl font-serif font-bold text-foreground">
-                {circle.memberCount}
-              </CardTitle>
+          <Card className="p-4 sm:p-5">
+            <CardHeader className="p-0 pb-2 flex flex-row items-center justify-between">
+              <CardDescription className="text-xs font-medium">Lecturas Totales</CardDescription>
+              <TrendingUp className="w-4 h-4 text-primary" />
             </CardHeader>
-            <CardContent className="p-5 pt-0">
-              <Link
-                href={`/circulo/${params.slug}/editor/members`}
-                className="text-[11px] text-primary hover:underline font-medium"
-              >
-                Gestionar miembros →
-              </Link>
+            <CardContent className="p-0">
+              <div className="text-2xl sm:text-3xl font-serif font-bold text-primary">
+                {totalReads.toLocaleString()}
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1">Vistas en el círculo</p>
+            </CardContent>
+          </Card>
+
+          <Card className="p-4 sm:p-5">
+            <CardHeader className="p-0 pb-2 flex flex-row items-center justify-between">
+              <CardDescription className="text-xs font-medium">Comentarios sin Atender</CardDescription>
+              <MessageSquareWarning className="w-4 h-4 text-rose-500" />
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="text-2xl sm:text-3xl font-serif font-bold text-rose-500">
+                {unattendedCommentsCount}
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1">Hilos sin respuesta</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Manuscripts Table */}
+        {/* 2. Gráfica Interactiva de Actividad Semanal (Diseñada para Dark Mode & Móvil) */}
+        <Card className="shadow-sm">
+          <CardHeader className="p-5 sm:p-6 pb-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <CardTitle className="font-serif text-lg font-bold flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-primary" /> Actividad y Tráfico Semanal del Círculo
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Evolución de lecturas acumuladas e interacciones por día de la semana.
+                </CardDescription>
+              </div>
+              <Badge variant="outline" className="text-[11px] text-emerald-600 dark:text-emerald-400 border-emerald-500/30 self-start sm:self-auto">
+                +24% vs semana anterior
+              </Badge>
+            </div>
+          </CardHeader>
+
+          <CardContent className="p-5 sm:p-6 pt-4">
+            {/* SVG / CSS Bar Chart */}
+            <div className="space-y-3">
+              <div className="h-44 sm:h-52 w-full flex items-end justify-between gap-2 sm:gap-4 pt-6 px-1 border-b border-border/60">
+                {weeklyTraffic.map((item) => {
+                  const heightPercent = Math.round((item.reads / maxReads) * 100);
+
+                  return (
+                    <div key={item.day} className="flex-1 flex flex-col items-center gap-2 group h-full justify-end">
+                      {/* Tooltip on Hover */}
+                      <span className="text-[10px] text-muted-foreground font-mono opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                        {item.reads} lect.
+                      </span>
+
+                      {/* Bar Fill */}
+                      <div
+                        className="w-full max-w-[40px] bg-primary/20 group-hover:bg-primary/40 rounded-t-lg transition-all duration-300 relative overflow-hidden"
+                        style={{ height: `${heightPercent}%` }}
+                      >
+                        <div
+                          className="w-full bg-primary rounded-t-lg transition-all"
+                          style={{ height: `${Math.min(100, heightPercent * 0.8)}%` }}
+                        />
+                      </div>
+
+                      {/* Day Label */}
+                      <span className="text-[11px] font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
+                        {item.day}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
+                <span>0 lecturas</span>
+                <span className="flex items-center gap-4">
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded bg-primary inline-block" /> Lecturas
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded bg-primary/20 inline-block" /> Interacciones
+                  </span>
+                </span>
+                <span>{maxReads} máx</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 3. Artículos con Más Lecturas del Círculo (Ranking Editorial) */}
         <Card className="shadow-sm">
           <CardHeader className="p-5 sm:p-6 pb-3">
-            <CardTitle className="text-lg font-serif font-bold flex items-center gap-2">
-              <FileText className="w-5 h-5 text-primary" /> Manuscritos Registrados
+            <CardTitle className="font-serif text-lg font-bold flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-primary" /> Manuscritos con Mayor Audiencia
             </CardTitle>
             <CardDescription className="text-xs">
-              Listado completo de textos registrados en la base de datos PostgreSQL de este círculo.
+              Artículos destacados del círculo ordenados por volumen de lectores e impacto comunitario.
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="p-5 sm:p-6 pt-0">
+            <div className="overflow-x-auto no-scrollbar">
+              <table className="w-full text-left text-xs min-w-[500px]">
+                <thead>
+                  <tr className="border-b border-border/40 text-muted-foreground">
+                    <th className="py-2.5 font-medium">Manuscrito</th>
+                    <th className="py-2.5 font-medium">Autor</th>
+                    <th className="py-2.5 font-medium text-center">Lecturas</th>
+                    <th className="py-2.5 font-medium text-center">Comentarios</th>
+                    <th className="py-2.5 font-medium text-right">Acción</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/30">
+                  {topReadArticles.map((art, idx) => (
+                    <tr key={art.slug} className="hover:bg-muted/30 transition-colors">
+                      <td className="py-3 pr-3">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs font-bold text-primary w-4">
+                            #{idx + 1}
+                          </span>
+                          <span className="font-serif font-bold text-foreground line-clamp-1">
+                            {art.title}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3 text-muted-foreground whitespace-nowrap">
+                        {art.author}
+                      </td>
+                      <td className="py-3 text-center font-mono font-semibold text-primary">
+                        {art.reads}
+                      </td>
+                      <td className="py-3 text-center font-mono text-muted-foreground">
+                        {art.comments}
+                      </td>
+                      <td className="py-3 text-right whitespace-nowrap">
+                        <Link href={`/circulo/${params.slug}/articulos/${art.slug}`}>
+                          <Button size="sm" variant="ghost" className="min-h-[36px] text-xs gap-1">
+                            <Eye className="w-3.5 h-3.5" /> Leer
+                          </Button>
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 4. Cola de Manuscritos & Borradores Registrados */}
+        <Card className="shadow-sm">
+          <CardHeader className="p-5 sm:p-6 pb-3">
+            <CardTitle className="font-serif text-lg font-bold flex items-center gap-2">
+              <FileText className="w-5 h-5 text-primary" /> Cola de Manuscritos y Textos Registrados
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Administración de textos del círculo con edición directa en TipTap.
             </CardDescription>
           </CardHeader>
           <CardContent className="p-5 sm:p-6 pt-0">
             <div className="divide-y divide-border/40">
-              {manuscripts.map((item) => (
+              {circleArticles.map((item) => (
                 <div
                   key={item.id}
                   className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
@@ -254,7 +447,7 @@ export default function CircleEditorPage({ params }: EditorPageProps) {
                       )}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      Autor: {item.author} • {item.readingTime} • {item.date}
+                      Autor: {item.authorName} • {item.readingTimeMin} min • {item.createdAt}
                     </div>
                   </div>
 
@@ -264,7 +457,7 @@ export default function CircleEditorPage({ params }: EditorPageProps) {
                         variant="outline"
                         className="min-h-[44px] text-xs gap-1.5 font-medium px-3"
                       >
-                        <Edit className="w-4 h-4 text-primary" /> Abrir en TipTap
+                        <Edit className="w-4 h-4 text-primary" /> Editar en TipTap
                       </Button>
                     </Link>
                     <Link href={`/circulo/${params.slug}/articulos/${item.slug}`}>
@@ -272,7 +465,7 @@ export default function CircleEditorPage({ params }: EditorPageProps) {
                         variant="ghost"
                         className="min-h-[44px] text-xs gap-1.5 font-medium px-3"
                       >
-                        <Eye className="w-4 h-4" /> Vista Previa
+                        <Eye className="w-4 h-4" /> Ver
                       </Button>
                     </Link>
                   </div>

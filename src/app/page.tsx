@@ -1,11 +1,17 @@
+'use client';
+
+import * as React from 'react';
 import Link from 'next/link';
 import {
   ArrowRight,
   BookOpen,
+  Bookmark,
   Calendar,
   Clock,
+  Compass,
   Feather,
   Layers,
+  Search,
   Shield,
   Sparkles,
   User,
@@ -15,21 +21,47 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar } from '@/components/ui/avatar';
-import { INITIAL_CIRCLES, INITIAL_ARTICLES, INITIAL_AUTHORS } from '@/lib/data/mock-db';
+import { ArticleSearchFilter } from '@/components/articles/article-search-filter';
+import {
+  INITIAL_CIRCLES,
+  INITIAL_ARTICLES,
+  INITIAL_AUTHORS,
+  isArticleBookmarked,
+  toggleBookmarkMock,
+} from '@/lib/data/mock-db';
 
 export default function HomePage() {
   const circles = Object.values(INITIAL_CIRCLES);
   const articles = INITIAL_ARTICLES.filter((a) => a.status === 'published');
   const featuredAuthors = Object.values(INITIAL_AUTHORS).filter((a) => a.role !== 'reader');
 
+  const [savedIds, setSavedIds] = React.useState<string[]>([]);
+
+  React.useEffect(() => {
+    const bookmarked = articles.filter((a) => isArticleBookmarked(a.id)).map((a) => a.id);
+    setSavedIds(bookmarked);
+  }, []);
+
+  const handleToggleBookmark = async (articleId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const res = await toggleBookmarkMock(articleId);
+    if (res.isBookmarked) {
+      setSavedIds((prev) => [...prev, articleId]);
+    } else {
+      setSavedIds((prev) => prev.filter((id) => id !== articleId));
+    }
+  };
+
   return (
     <div className="w-full max-w-full overflow-x-hidden space-y-12 sm:space-y-16 pb-20">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden border-b border-border/40 bg-gradient-to-b from-muted/30 via-background to-background py-16 sm:py-24 md:py-28">
+      {/* 1. Hero Section: La Experiencia Pública de Lectura */}
+      <section className="relative overflow-hidden border-b border-border/40 bg-gradient-to-b from-muted/30 via-background to-background py-14 sm:py-20 md:py-24">
         <div className="container mx-auto max-w-5xl px-3 sm:px-6 text-center space-y-6">
           <Badge
             variant="outline"
-            className="gap-1.5 py-1.5 px-3.5 text-xs rounded-full border-primary/30 text-primary bg-primary/5 shadow-sm"
+            className="gap-1.5 py-1.5 px-3.5 text-xs rounded-full border-primary/30 text-primary bg-primary/5 shadow-sm inline-flex items-center"
           >
             <Sparkles className="w-3.5 h-3.5" />
             Curaduría Editorial & Humanismo
@@ -40,10 +72,10 @@ export default function HomePage() {
           </h1>
 
           <p className="mx-auto max-w-2xl text-sm sm:text-lg text-muted-foreground leading-relaxed">
-            Una plataforma donde el ensayo clínico, la crónica urbana y la crítica literaria convergen bajo el rigor del pensamiento crítico y la curaduría editorial.
+            Una plataforma donde el ensayo clínico, la crónica urbana y la crítica literaria convergen bajo el rigor de la curaduría editorial y el diálogo comunitario.
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <Link href="/circulo/ensayo-medico" className="w-full sm:w-auto">
               <Button
                 className="w-full sm:w-auto min-h-[44px] gap-2 rounded-full px-6 text-xs sm:text-sm font-medium bg-primary hover:bg-primary/90"
@@ -51,38 +83,38 @@ export default function HomePage() {
                 Explorar Círculos <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
-            <Link href="/agenda" className="w-full sm:w-auto">
+            <Link href="/explorar" className="w-full sm:w-auto">
               <Button
                 variant="outline"
-                className="w-full sm:w-auto min-h-[44px] rounded-full px-6 text-xs sm:text-sm font-medium"
+                className="w-full sm:w-auto min-h-[44px] gap-2 rounded-full px-6 text-xs sm:text-sm font-medium"
               >
-                <Calendar className="w-4 h-4 mr-1.5" /> Agendar Mentoría
+                <Compass className="w-4 h-4" /> Buscar en Biblioteca
               </Button>
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Círculos Editoriales */}
+      {/* 2. Círculos Editoriales Autónomos */}
       <section className="container mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-border/40 pb-3">
           <div>
             <h2 className="font-serif text-2xl sm:text-3xl font-bold text-foreground">
               Círculos Editoriales
             </h2>
             <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-              Comunidades temáticas supervisadas por editores expertos.
+              Comunidades temáticas con dirección propia, autores invitados y lectores activos.
             </p>
           </div>
-          <span className="text-xs text-muted-foreground font-medium">
-            3 círculos temáticos activos
-          </span>
+          <Link href="/circulos" className="text-xs font-semibold text-primary hover:underline flex items-center gap-1">
+            Ver los 3 Círculos →
+          </Link>
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
           {circles.map((circle) => (
             <Link key={circle.slug} href={`/circulo/${circle.slug}`} className="group block">
-              <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-primary/50 group-hover:-translate-y-1 flex flex-col justify-between">
+              <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-primary/50 group-hover:-translate-y-1 flex flex-col justify-between border-border/60">
                 <div>
                   <div className="aspect-[16/9] w-full overflow-hidden bg-muted relative">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -93,7 +125,7 @@ export default function HomePage() {
                     />
                     <div className="absolute top-3 right-3">
                       <Badge className="bg-background/85 text-foreground backdrop-blur text-xs font-semibold">
-                        {circle.membersCount} Miembros
+                        {circle.memberCount} Miembros
                       </Badge>
                     </div>
                   </div>
@@ -111,7 +143,7 @@ export default function HomePage() {
                 <CardContent className="p-5 pt-0 text-xs text-muted-foreground flex items-center justify-between border-t border-border/40 mt-2">
                   <span className="font-medium text-foreground">Editora: {circle.editorName}</span>
                   <span className="text-primary font-medium flex items-center gap-1 min-h-[44px]">
-                    Explorar <ArrowRight className="w-3.5 h-3.5" />
+                    Entrar <ArrowRight className="w-3.5 h-3.5" />
                   </span>
                 </CardContent>
               </Card>
@@ -120,15 +152,30 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Autores & Editores Destacados */}
+      {/* 3. Búsqueda y Filtros en Tiempo Real (Debounce 300ms + Filtros por Tema y Autor) */}
+      <section className="container mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 space-y-6">
+        <div className="border-b border-border/40 pb-3">
+          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-foreground">
+            Biblioteca de Manuscritos & Ensayos
+          </h2>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+            Búsqueda instantánea con filtros combinados por autor, temas/etiquetas, círculo y artículos guardados.
+          </p>
+        </div>
+
+        {/* Componente de Búsqueda & Filtro */}
+        <ArticleSearchFilter articles={articles} />
+      </section>
+
+      {/* 4. Perfiles Públicos de Autores y Ensayistas */}
       <section className="container mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-border/40 pb-3">
           <div>
             <h2 className="font-serif text-2xl sm:text-3xl font-bold text-foreground">
-              Voces & Ensayistas
+              Voces & Ensayistas Destacados
             </h2>
             <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-              Perfiles públicos de autores, médicos y críticos literarios.
+              Perfiles públicos con biografía, obra publicada y sesiones de diálogo de 30 minutos.
             </p>
           </div>
         </div>
@@ -136,7 +183,7 @@ export default function HomePage() {
         <div className="grid gap-6 sm:grid-cols-2">
           {featuredAuthors.map((author) => (
             <Link key={author.id} href={`/autor/${author.id}`} className="group block">
-              <Card className="h-full p-5 sm:p-6 transition-all duration-200 hover:border-primary/50 hover:shadow-md">
+              <Card className="h-full p-5 sm:p-6 transition-all duration-200 hover:border-primary/50 hover:shadow-md border-border/60">
                 <div className="flex items-start gap-4">
                   <Avatar
                     src={author.avatarUrl}
@@ -166,79 +213,10 @@ export default function HomePage() {
                     </p>
 
                     <div className="text-[11px] text-primary font-medium pt-2 flex items-center gap-1 min-h-[44px]">
-                      Ver perfil completo y obras →
+                      Ver biografía y obras publicadas →
                     </div>
                   </div>
                 </div>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Artículos Destacados */}
-      <section className="container mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
-          <div>
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-foreground">
-              Manuscritos y Ensayos Recientes
-            </h2>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-              Lecturas completas en prosa en español de libre acceso.
-            </p>
-          </div>
-        </div>
-
-        <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
-          {articles.map((article) => (
-            <Link
-              key={article.slug}
-              href={`/circulo/${article.circleSlug}/articulos/${article.slug}`}
-              className="group flex flex-col"
-            >
-              <Card className="flex-1 flex flex-col justify-between transition-all duration-300 hover:shadow-md hover:border-primary/40">
-                <CardHeader className="p-5 space-y-3">
-                  <div className="flex items-center justify-between text-xs">
-                    <Badge variant="secondary" className="font-normal text-[11px]">
-                      {article.circleName}
-                    </Badge>
-                    <span className="flex items-center gap-1 text-muted-foreground">
-                      <Clock className="w-3 h-3" /> {article.readingTimeMin} min
-                    </span>
-                  </div>
-
-                  <CardTitle className="font-serif text-lg leading-snug group-hover:text-primary transition-colors">
-                    {article.title}
-                  </CardTitle>
-
-                  <CardDescription className="line-clamp-3 text-xs leading-relaxed text-muted-foreground">
-                    {article.excerpt}
-                  </CardDescription>
-                </CardHeader>
-
-                <CardContent className="p-5 pt-0">
-                  <div className="flex flex-wrap gap-1 mb-4">
-                    {article.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="text-[10px] bg-muted px-2 py-0.5 rounded text-muted-foreground font-medium"
-                      >
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="flex items-center justify-between pt-3 border-t border-border/40 text-xs">
-                    <div className="flex items-center gap-2">
-                      <Avatar src={article.authorAvatar} fallback="JS" className="w-7 h-7" />
-                      <span className="font-medium text-foreground">{article.authorName}</span>
-                    </div>
-
-                    <span className="text-primary font-medium flex items-center gap-1 min-h-[44px]">
-                      Leer <ArrowRight className="w-3 h-3" />
-                    </span>
-                  </div>
-                </CardContent>
               </Card>
             </Link>
           ))}
