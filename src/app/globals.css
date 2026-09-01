@@ -58,3 +58,24 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+
+/* TipTap ProseMirror Styling & Padding Fixes */
+.ProseMirror {
+  outline: none !important;
+  min-height: 480px;
+  padding-top: 1.5rem !important;
+  padding-bottom: 4rem !important;
+}
+
+.ProseMirror:focus {
+  outline: none !important;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  color: hsl(var(--muted-foreground));
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  opacity: 0.5;
+}

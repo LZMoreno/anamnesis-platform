@@ -21,8 +21,10 @@ import {
   Send,
   Settings2,
   Shield,
+  ShieldAlert,
   Sparkles,
   Tag,
+  UserPlus,
   XCircle,
 } from 'lucide-react';
 import { TipTapEditor } from '@/components/editor/tiptap-editor';
@@ -31,7 +33,13 @@ import { AIAssistantModal } from '@/components/editor/ai-assistant-modal';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { INITIAL_CIRCLES, INITIAL_ARTICLES, INITIAL_AUTHORS } from '@/lib/data/mock-db';
+import {
+  INITIAL_CIRCLES,
+  INITIAL_ARTICLES,
+  INITIAL_AUTHORS,
+  upsertArticleMock,
+  generateUniqueSlug,
+} from '@/lib/data/mock-db';
 
 type SaveState = 'saved' | 'saving' | 'dirty' | 'error';
 type ArticleStatus = 'draft' | 'published' | 'archived';
@@ -40,6 +48,14 @@ export default function ArticleEditorPage() {
   const params = useParams();
   const router = useRouter();
   const articleId = (params.id as string) || 'nuevo';
+
+  const [currentRole, setCurrentRole] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const match = document.cookie.match(/anamnesis_demo_role=([^;]+)/);
+    const role = match ? match[1] : 'guest';
+    setCurrentRole(role);
+  }, []);
 
   // Buscar si existe artículo inicial o crear nuevo
   const existingArticle = INITIAL_ARTICLES.find(
@@ -79,7 +95,11 @@ export default function ArticleEditorPage() {
     existingArticle?.tags || ['Medicina Narrativa', 'Bioética', 'Guardias']
   );
   const [coverUrl, setCoverUrl] = React.useState(
-    'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=1200&auto=format&fit=crop&q=80'
+    existingArticle?.coverUrl ||
+      'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=1200&auto=format&fit=crop&q=80'
+  );
+  const [slug, setSlug] = React.useState(
+    existingArticle?.slug || generateUniqueSlug(title, existingArticle?.id)
   );
   const [tagInput, setTagInput] = React.useState('');
 
@@ -94,10 +114,49 @@ export default function ArticleEditorPage() {
   });
   const [settingsOpen, setSettingsOpen] = React.useState(false);
   const [aiModalOpen, setAiModalOpen] = React.useState(false);
+  const [publishToast, setPublishToast] = React.useState<string | null>(null);
 
-  // Autor por defecto (Dr. Julián Sotomayor)
+  // Autor por defecto
   const author = INITIAL_AUTHORS['bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb'];
   const currentCircle = INITIAL_CIRCLES[circleSlug] || INITIAL_CIRCLES['ensayo-medico'];
+
+  // Guard de Autorización: Si es invitado sin cuenta o lector simple, bloquear acceso al editor
+  if (currentRole !== null && (currentRole === 'guest' || currentRole === 'reader')) {
+    return (
+      <div className="w-full max-w-full overflow-x-hidden pb-20">
+        <div className="container mx-auto max-w-lg px-4 py-16 sm:py-24 text-center space-y-6">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <Lock className="h-8 w-8" />
+          </div>
+
+          <div className="space-y-2">
+            <h1 className="font-serif text-3xl font-bold tracking-tight">
+              Acceso a Redacción Restringido
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              El editor de artículos requiere que inicies sesión con una cuenta de <strong>Autor</strong> o <strong>Editor de Círculo</strong>.
+            </p>
+          </div>
+
+          <div className="rounded-xl bg-muted/40 p-4 text-xs text-muted-foreground border border-border/40 text-left space-y-2">
+            <div className="font-semibold text-foreground flex items-center gap-1.5">
+              <Shield className="w-4 h-4 text-emerald-500" /> Permisos de Publicación:
+            </div>
+            <p>• Los lectores pueden explorar, guardar marcadores y comentar.</p>
+            <p>• Para publicar tus propios manuscritos, inicia sesión como <strong>Autor (Dr. Julián Sotomayor)</strong> o crea una cuenta de autor.</p>
+          </div>
+
+          <div className="flex justify-center gap-3 pt-2">
+            <Link href="/login">
+              <Button className="min-h-[44px] gap-2 text-xs font-medium bg-primary hover:bg-primary/90 px-6">
+                <UserPlus className="w-4 h-4" /> Iniciar Sesión / Cuenta de Autor
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // 1. AUTOGUARDADO CADA 5 SEGUNDOS
   React.useEffect(() => {
@@ -112,24 +171,42 @@ export default function ArticleEditorPage() {
     return () => clearTimeout(autosaveTimer);
   }, [isDirty, title, excerpt, contentHTML, circleSlug, status, tags, coverUrl]);
 
-  const handlePerformSave = (showNotification = true) => {
+  const handlePerformSave = async (showNotification = true) => {
     setSaveState('saving');
 
-    setTimeout(() => {
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString('es-ES', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-      });
-      setLastSavedTime(timeStr);
-      setSaveState('saved');
-      setIsDirty(false);
+    const updatedArticle = await upsertArticleMock({
+      id: existingArticle?.id,
+      title,
+      slug,
+      circleSlug,
+      excerpt,
+      readingTimeMin: stats.readingTimeMin,
+      status,
+      tags,
+      coverUrl,
+    });
 
-      if (showNotification && status === 'published') {
-        alert('¡Manuscrito guardado y publicado en el círculo correspondiente!');
+    setSlug(updatedArticle.slug);
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('es-ES', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+    setLastSavedTime(timeStr);
+    setSaveState('saved');
+    setIsDirty(false);
+
+    if (showNotification) {
+      if (status === 'published') {
+        setPublishToast(`¡Artículo publicado con éxito en /circulo/${circleSlug}/articulos/${updatedArticle.slug}!`);
+        setTimeout(() => setPublishToast(null), 5000);
+      } else {
+        setPublishToast(`Borrador guardado a las ${timeStr}`);
+        setTimeout(() => setPublishToast(null), 3000);
       }
-    }, 700);
+    }
   };
 
   const handleContentChange = (
@@ -162,6 +239,7 @@ export default function ArticleEditorPage() {
   // Asistente IA Handlers
   const handleApplyAITitle = (newTitle: string) => {
     setTitle(newTitle);
+    setSlug(generateUniqueSlug(newTitle, existingArticle?.id));
     setIsDirty(true);
   };
 
@@ -196,6 +274,10 @@ export default function ArticleEditorPage() {
                 <span>Redacción</span>
                 <span>/</span>
                 <span className="font-medium text-foreground">{currentCircle.name}</span>
+                <span>/</span>
+                <span className="font-mono text-[11px] text-muted-foreground">
+                  {slug}
+                </span>
               </div>
             </div>
           </div>
@@ -230,7 +312,7 @@ export default function ArticleEditorPage() {
             )}
           </div>
 
-          {/* Right Actions: AI Assistant, Status Selector, Preview Toggle, Settings, Save */}
+          {/* Right Actions */}
           <div className="flex items-center gap-1.5 sm:gap-2">
             {/* AI Assistant Button */}
             <Button
@@ -243,7 +325,7 @@ export default function ArticleEditorPage() {
               <span className="hidden sm:inline">Asistente IA</span>
             </Button>
 
-            {/* Status Selector */}
+            {/* Status Selector: Borrador, Publicado, Archivado */}
             <select
               value={status}
               onChange={(e) => {
@@ -282,7 +364,7 @@ export default function ArticleEditorPage() {
               size="icon"
               onClick={() => setSettingsOpen(!settingsOpen)}
               className={`min-h-[44px] min-w-[44px] ${settingsOpen ? 'bg-accent' : ''}`}
-              title="Ajustes de metadata del artículo"
+              title="Ajustes de portada, resumen y etiquetas"
             >
               <Settings2 className="w-4 h-4" />
             </Button>
@@ -310,27 +392,44 @@ export default function ArticleEditorPage() {
 
       {/* Main Container */}
       <div className="container mx-auto max-w-6xl px-3 sm:px-6 pt-6 space-y-6">
+        {/* Publish Toast Notification */}
+        {publishToast && (
+          <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 flex items-center justify-between text-xs sm:text-sm animate-in fade-in">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5" />
+              <span>{publishToast}</span>
+            </div>
+            {status === 'published' && (
+              <Link href={`/circulo/${circleSlug}/articulos/${slug}`}>
+                <Button size="sm" variant="outline" className="min-h-[36px] text-xs">
+                  Ver Artículo Publicado →
+                </Button>
+              </Link>
+            )}
+          </div>
+        )}
+
         {/* Collapsible Metadata Settings Drawer */}
         {settingsOpen && (
           <div className="p-5 rounded-2xl border border-primary/30 bg-card shadow-md space-y-4 animate-in slide-in-from-top-2 duration-200">
             <div className="flex items-center justify-between border-b border-border/40 pb-2">
               <h3 className="font-serif font-bold text-sm flex items-center gap-2">
-                <Settings2 className="w-4 h-4 text-primary" /> Metadatos y Configuración del Artículo
+                <Settings2 className="w-4 h-4 text-primary" /> Metadatos del Manuscrito
               </h3>
-              <span className="text-[11px] text-muted-foreground">Autoguardado activado</span>
+              <span className="text-[11px] text-muted-foreground">Autoguardado a 5 segundos</span>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">
               {/* Circle Assignment */}
               <div className="space-y-1.5">
-                <label className="text-xs font-medium">Círculo Editorial de Publicación</label>
+                <label className="text-xs font-medium">Círculo Editorial</label>
                 <select
                   value={circleSlug}
                   onChange={(e) => {
                     setCircleSlug(e.target.value);
                     setIsDirty(true);
                   }}
-                  className="w-full min-h-[44px] rounded-lg border border-input bg-background px-3 text-xs"
+                  className="w-full min-h-[44px] rounded-lg border border-input bg-background px-3 text-xs font-medium"
                 >
                   <option value="ensayo-medico">Ensayo Médico</option>
                   <option value="cronica">Crónica</option>
@@ -354,6 +453,24 @@ export default function ArticleEditorPage() {
               </div>
             </div>
 
+            {/* Custom / Unique Slug Display */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium">Dirección Legible (Slug Único)</label>
+              <Input
+                type="text"
+                value={slug}
+                onChange={(e) => {
+                  setSlug(e.target.value);
+                  setIsDirty(true);
+                }}
+                placeholder="slug-del-articulo"
+                className="min-h-[44px] text-xs font-mono"
+              />
+              <span className="text-[10px] text-muted-foreground">
+                URL final: /circulo/{circleSlug}/articulos/{slug}
+              </span>
+            </div>
+
             {/* Excerpt */}
             <div className="space-y-1.5">
               <label className="text-xs font-medium">Extracto / Bajada Editorial</label>
@@ -371,7 +488,7 @@ export default function ArticleEditorPage() {
 
             {/* Tags */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium">Etiquetas Temáticas (Presiona Enter para agregar)</label>
+              <label className="text-xs font-medium">Temas & Etiquetas (Presiona Enter)</label>
               <div className="flex flex-wrap items-center gap-1.5 mb-2">
                 {tags.map((tag) => (
                   <Badge
@@ -400,13 +517,14 @@ export default function ArticleEditorPage() {
         {/* View Mode: Edit vs Preview */}
         {viewMode === 'edit' ? (
           <div className="space-y-6">
-            {/* Document Header Fields */}
-            <div className="space-y-3 bg-card p-5 sm:p-8 rounded-2xl border border-border/80 shadow-sm">
+            {/* Unified Document Header */}
+            <div className="space-y-3 bg-card p-6 sm:p-8 rounded-2xl border border-border/80 shadow-sm">
               <Input
                 type="text"
                 value={title}
                 onChange={(e) => {
                   setTitle(e.target.value);
+                  setSlug(generateUniqueSlug(e.target.value, existingArticle?.id));
                   setIsDirty(true);
                 }}
                 placeholder="Título del Manuscrito o Ensayo..."

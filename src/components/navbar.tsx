@@ -22,7 +22,7 @@ import {
   X,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { RoleSelector } from '@/components/role-selector';
+import { UserAccountNav } from '@/components/user-account-nav';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -35,6 +35,8 @@ export function Navbar() {
     const match = document.cookie.match(/anamnesis_demo_role=([^;]+)/);
     if (match) {
       setCurrentRole(match[1]);
+    } else {
+      setCurrentRole('reader');
     }
   }, [pathname]);
 
@@ -61,6 +63,7 @@ export function Navbar() {
   ];
 
   const isEditor = currentRole === 'editor';
+  const isAuthor = currentRole === 'author';
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/90 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 transition-colors">
@@ -110,21 +113,22 @@ export function Navbar() {
 
         {/* Desktop & Mobile Actions */}
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="hidden sm:block">
-            <RoleSelector />
-          </div>
+          {/* User Account Navigation & Avatar */}
+          <UserAccountNav onRoleChange={(role) => setCurrentRole(role)} />
+
           <ThemeToggle />
 
-          <Link href="/login" className="hidden sm:inline-block">
-            <Button
-              variant="outline"
-              className="min-h-[44px] gap-1.5 text-xs font-medium px-3 border-border/80 hover:bg-accent"
-              title="Iniciar sesión o registrar cuenta"
-            >
-              <User className="w-4 h-4 text-primary" />
-              <span>Cuenta</span>
-            </Button>
-          </Link>
+          {(isAuthor || isEditor) && (
+            <Link href="/editor/nuevo" className="hidden sm:inline-block">
+              <Button
+                variant="outline"
+                className="min-h-[44px] gap-1.5 text-xs font-medium px-3 border-primary/40 text-primary hover:bg-primary/10"
+              >
+                <PenTool className="w-4 h-4" />
+                <span>Redactar</span>
+              </Button>
+            </Link>
+          )}
 
           {isEditor && (
             <Link
@@ -140,7 +144,7 @@ export function Navbar() {
             </Link>
           )}
 
-          {/* Mobile Hamburger Toggle Button (min 44x44px touch target) */}
+          {/* Mobile Hamburger Toggle Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="lg:hidden flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg border border-border/60 text-muted-foreground hover:text-foreground hover:bg-accent transition"
@@ -158,13 +162,6 @@ export function Navbar() {
       {/* Mobile Drawer / Dropdown */}
       {mobileMenuOpen && (
         <div className="lg:hidden border-b border-border/60 bg-background px-4 py-4 space-y-4 shadow-xl animate-in slide-in-from-top-2 duration-200">
-          <div className="flex items-center justify-between pb-3 border-b border-border/40">
-            <span className="text-xs font-semibold text-muted-foreground">
-              Simulador RBAC Móvil:
-            </span>
-            <RoleSelector />
-          </div>
-
           {/* Navigation Links (Mobile) */}
           <nav className="space-y-1">
             {navLinks.map((link) => {
@@ -201,7 +198,7 @@ export function Navbar() {
             >
               <div className="flex items-center gap-3">
                 <User className="w-4 h-4 text-primary" />
-                <span>Iniciar Sesión / Cuenta</span>
+                <span>Gestión de Cuenta & Acceso</span>
               </div>
               <ChevronRight className="w-4 h-4 opacity-50" />
             </Link>

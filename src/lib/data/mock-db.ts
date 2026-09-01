@@ -903,3 +903,79 @@ export async function deleteSlotMock(slotId: string): Promise<boolean> {
   INITIAL_SLOTS = INITIAL_SLOTS.filter((s) => s.id !== slotId);
   return INITIAL_SLOTS.length < initialLength;
 }
+
+// ------------------------------------------------------------------------------
+// ARTICLE UPSERT & UNIQUE SLUG GENERATOR
+// ------------------------------------------------------------------------------
+
+export function generateUniqueSlug(title: string, currentArticleId?: string): string {
+  const baseSlug = title
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .slice(0, 60) || 'manuscrito';
+
+  const collision = INITIAL_ARTICLES.find(
+    (a) => a.slug === baseSlug && a.id !== currentArticleId
+  );
+
+  if (!collision) {
+    return baseSlug;
+  }
+
+  // Generar sufijo único de 4 caracteres para evitar colisión de URLs
+  const uniqueSuffix = Math.random().toString(36).substring(2, 6);
+  return `${baseSlug}-${uniqueSuffix}`;
+}
+
+export async function upsertArticleMock(article: Partial<CircleArticleItem> & { title: string; circleSlug: string }): Promise<CircleArticleItem> {
+  const existingIndex = INITIAL_ARTICLES.findIndex(
+    (a) => a.id === article.id || (article.slug && a.slug === article.slug)
+  );
+
+  const author = article.authorId
+    ? INITIAL_AUTHORS[article.authorId]
+    : INITIAL_AUTHORS['bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb'];
+
+  const circle = INITIAL_CIRCLES[article.circleSlug] || INITIAL_CIRCLES['ensayo-medico'];
+
+  const finalSlug = article.slug || generateUniqueSlug(article.title, article.id);
+
+  if (existingIndex > -1) {
+    const updated: CircleArticleItem = {
+      ...INITIAL_ARTICLES[existingIndex],
+      ...article,
+      slug: finalSlug,
+      circleId: circle.id,
+      circleName: circle.name,
+      circleSlug: circle.slug,
+      status: article.status || INITIAL_ARTICLES[existingIndex].status,
+    };
+    INITIAL_ARTICLES[existingIndex] = updated;
+    return updated;
+  } else {
+    const newArticle: CircleArticleItem = {
+      id: article.id || `art-${Date.now()}`,
+      title: article.title,
+      slug: finalSlug,
+      circleId: circle.id,
+      circleSlug: circle.slug,
+      circleName: circle.name,
+      authorId: author?.id || 'bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb',
+      authorName: author?.fullName || 'Dr. Julián Sotomayor',
+      authorAvatar: author?.avatarUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+      excerpt: article.excerpt || '',
+      readingTimeMin: article.readingTimeMin || 5,
+      status: article.status || 'draft',
+      tags: article.tags || ['Ensayo'],
+      createdAt: '1 de Septiembre, 2026',
+      coverUrl: article.coverUrl || 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=800',
+    };
+    INITIAL_ARTICLES.unshift(newArticle);
+    return newArticle;
+  }
+}
+

@@ -55,14 +55,14 @@ export function EditorToolbar({
   };
 
   return (
-    <div className="sticky top-16 z-30 w-full border-b border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 py-1.5 px-2 sm:px-4">
+    <div className="sticky top-16 z-30 w-full border-b border-border/80 bg-card shadow-sm py-2 px-2 sm:px-4 transition-colors">
       <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
         {/* Headings */}
-        <div className="flex items-center border-r border-border/50 pr-1.5 mr-1 gap-0.5 shrink-0">
+        <div className="flex items-center border-r border-border/60 pr-1.5 mr-1 gap-0.5 shrink-0">
           <button
             type="button"
             onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-            className={`min-h-[44px] min-w-[44px] p-2 rounded-lg flex items-center justify-center text-xs font-bold transition ${
+            className={`min-h-[40px] min-w-[40px] p-2 rounded-lg flex items-center justify-center text-xs font-bold transition ${
               editor.isActive('heading', { level: 1 })
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -75,7 +75,7 @@ export function EditorToolbar({
           <button
             type="button"
             onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-            className={`min-h-[44px] min-w-[44px] p-2 rounded-lg flex items-center justify-center text-xs font-bold transition ${
+            className={`min-h-[40px] min-w-[40px] p-2 rounded-lg flex items-center justify-center text-xs font-bold transition ${
               editor.isActive('heading', { level: 2 })
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -88,7 +88,7 @@ export function EditorToolbar({
           <button
             type="button"
             onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-            className={`min-h-[44px] min-w-[44px] p-2 rounded-lg flex items-center justify-center text-xs font-bold transition ${
+            className={`min-h-[40px] min-w-[40px] p-2 rounded-lg flex items-center justify-center text-xs font-bold transition ${
               editor.isActive('heading', { level: 3 })
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -100,11 +100,11 @@ export function EditorToolbar({
         </div>
 
         {/* Text Formats */}
-        <div className="flex items-center border-r border-border/50 pr-1.5 mr-1 gap-0.5 shrink-0">
+        <div className="flex items-center border-r border-border/60 pr-1.5 mr-1 gap-0.5 shrink-0">
           <button
             type="button"
             onClick={() => editor.chain().focus().toggleBold().run()}
-            className={`min-h-[44px] min-w-[44px] p-2 rounded-lg flex items-center justify-center transition ${
+            className={`min-h-[40px] min-w-[40px] p-2 rounded-lg flex items-center justify-center transition ${
               editor.isActive('bold')
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -117,7 +117,7 @@ export function EditorToolbar({
           <button
             type="button"
             onClick={() => editor.chain().focus().toggleItalic().run()}
-            className={`min-h-[44px] min-w-[44px] p-2 rounded-lg flex items-center justify-center transition ${
+            className={`min-h-[40px] min-w-[40px] p-2 rounded-lg flex items-center justify-center transition ${
               editor.isActive('italic')
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -130,7 +130,7 @@ export function EditorToolbar({
           <button
             type="button"
             onClick={() => editor.chain().focus().toggleStrike().run()}
-            className={`min-h-[44px] min-w-[44px] p-2 rounded-lg flex items-center justify-center transition ${
+            className={`min-h-[40px] min-w-[40px] p-2 rounded-lg flex items-center justify-center transition ${
               editor.isActive('strike')
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -143,7 +143,7 @@ export function EditorToolbar({
           <button
             type="button"
             onClick={() => editor.chain().focus().toggleCode().run()}
-            className={`min-h-[44px] min-w-[44px] p-2 rounded-lg flex items-center justify-center transition ${
+            className={`min-h-[40px] min-w-[40px] p-2 rounded-lg flex items-center justify-center transition ${
               editor.isActive('code')
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -155,11 +155,11 @@ export function EditorToolbar({
         </div>
 
         {/* Blocks & Lists */}
-        <div className="flex items-center border-r border-border/50 pr-1.5 mr-1 gap-0.5 shrink-0">
+        <div className="flex items-center border-r border-border/60 pr-1.5 mr-1 gap-0.5 shrink-0">
           <button
             type="button"
             onClick={() => editor.chain().focus().toggleBlockquote().run()}
-            className={`min-h-[44px] min-w-[44px] p-2 rounded-lg flex items-center justify-center transition ${
+            className={`min-h-[40px] min-w-[40px] p-2 rounded-lg flex items-center justify-center transition ${
               editor.isActive('blockquote')
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -172,7 +172,7 @@ export function EditorToolbar({
           <button
             type="button"
             onClick={() => editor.chain().focus().toggleBulletList().run()}
-            className={`min-h-[44px] min-w-[44px] p-2 rounded-lg flex items-center justify-center transition ${
+            className={`min-h-[40px] min-w-[40px] p-2 rounded-lg flex items-center justify-center transition ${
               editor.isActive('bulletList')
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -185,7 +185,7 @@ export function EditorToolbar({
           <button
             type="button"
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            className={`min-h-[44px] min-w-[44px] p-2 rounded-lg flex items-center justify-center transition ${
+            className={`min-h-[40px] min-w-[40px] p-2 rounded-lg flex items-center justify-center transition ${
               editor.isActive('orderedList')
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -198,7 +198,7 @@ export function EditorToolbar({
           <button
             type="button"
             onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-            className={`min-h-[44px] min-w-[44px] p-2 rounded-lg flex items-center justify-center transition ${
+            className={`min-h-[40px] min-w-[40px] p-2 rounded-lg flex items-center justify-center transition ${
               editor.isActive('codeBlock')
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -210,11 +210,11 @@ export function EditorToolbar({
         </div>
 
         {/* Media & Extensions */}
-        <div className="flex items-center border-r border-border/50 pr-1.5 mr-1 gap-0.5 shrink-0">
+        <div className="flex items-center border-r border-border/60 pr-1.5 mr-1 gap-0.5 shrink-0">
           <button
             type="button"
             onClick={setLink}
-            className={`min-h-[44px] min-w-[44px] p-2 rounded-lg flex items-center justify-center transition ${
+            className={`min-h-[40px] min-w-[40px] p-2 rounded-lg flex items-center justify-center transition ${
               editor.isActive('link')
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -227,7 +227,7 @@ export function EditorToolbar({
           <button
             type="button"
             onClick={onOpenImageModal}
-            className="min-h-[44px] min-w-[44px] p-2 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition"
+            className="min-h-[40px] min-w-[40px] p-2 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition"
             title="Insertar Imagen / Subir a Supabase Storage"
           >
             <ImageIcon className="w-4 h-4" />
@@ -237,7 +237,7 @@ export function EditorToolbar({
           <button
             type="button"
             onClick={onOpenBookModal}
-            className="min-h-[44px] px-3 rounded-lg flex items-center gap-1.5 text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition shrink-0"
+            className="min-h-[40px] px-3 rounded-lg flex items-center gap-1.5 text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition shrink-0"
             title="Insertar Ficha de Cita de Libro (Open Library API)"
           >
             <BookOpen className="w-4 h-4" />
@@ -247,7 +247,7 @@ export function EditorToolbar({
           <button
             type="button"
             onClick={() => editor.chain().focus().setHorizontalRule().run()}
-            className="min-h-[44px] min-w-[44px] p-2 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition"
+            className="min-h-[40px] min-w-[40px] p-2 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition"
             title="Separador Horizontal (HR)"
           >
             <Minus className="w-4 h-4" />
@@ -260,7 +260,7 @@ export function EditorToolbar({
             type="button"
             onClick={() => editor.chain().focus().undo().run()}
             disabled={!editor.can().undo()}
-            className="min-h-[44px] min-w-[44px] p-2 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40 transition"
+            className="min-h-[40px] min-w-[40px] p-2 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40 transition"
             title="Deshacer (Ctrl+Z)"
           >
             <Undo2 className="w-4 h-4" />
@@ -270,7 +270,7 @@ export function EditorToolbar({
             type="button"
             onClick={() => editor.chain().focus().redo().run()}
             disabled={!editor.can().redo()}
-            className="min-h-[44px] min-w-[44px] p-2 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40 transition"
+            className="min-h-[40px] min-w-[40px] p-2 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40 transition"
             title="Rehacer (Ctrl+Y)"
           >
             <Redo2 className="w-4 h-4" />

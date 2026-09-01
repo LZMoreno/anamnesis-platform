@@ -74,7 +74,7 @@ export function TipTapEditor({
     editorProps: {
       attributes: {
         class:
-          'prose dark:prose-invert max-w-none focus:outline-none min-h-[500px] font-serif text-base sm:text-lg leading-relaxed text-foreground px-4 sm:px-10 py-6',
+          'prose dark:prose-invert max-w-none focus:outline-none min-h-[500px] font-serif text-base sm:text-lg leading-relaxed text-foreground px-6 sm:px-12 py-8',
       },
       // Sanitización estricta al pegar desde Microsoft Word, Google Docs o portapapeles externo
       transformPastedHTML(html) {
@@ -82,7 +82,6 @@ export function TipTapEditor({
       },
       handlePaste(view, event) {
         const text = event.clipboardData?.getData('text/plain');
-        // Si es código puro o markdown, transformPastedHTML ya lo maneja o dejamos que TipTap lo inserte limpio
         return false;
       },
     },
@@ -91,7 +90,7 @@ export function TipTapEditor({
         onDirty();
       }
 
-      // Debounce de 250ms para evitar jank/lag en artículos monstruo (+9,000 palabras)
+      // Debounce de 250ms para evitar lag en manuscritos extensos
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
@@ -144,7 +143,7 @@ export function TipTapEditor({
         onOpenImageModal={() => setImageModalOpen(true)}
       />
 
-      {/* Editor Canvas */}
+      {/* Editor Canvas with Generous Top Padding */}
       <div className="flex-1 bg-background/50 min-h-[500px] cursor-text">
         <EditorContent editor={editor} />
       </div>
