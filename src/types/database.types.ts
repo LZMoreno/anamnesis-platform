@@ -270,6 +270,7 @@ export interface Database {
           id: string;
           slot_id: string;
           reader_id: string;
+          article_id: string | null;
           status: BookingStatus;
           notes: string | null;
           created_at: string;
@@ -278,6 +279,7 @@ export interface Database {
           id?: string;
           slot_id: string;
           reader_id: string;
+          article_id?: string | null;
           status?: BookingStatus;
           notes?: string | null;
           created_at?: string;
@@ -286,9 +288,38 @@ export interface Database {
           id?: string;
           slot_id?: string;
           reader_id?: string;
+          article_id?: string | null;
           status?: BookingStatus;
           notes?: string | null;
           created_at?: string;
+        };
+      };
+    };
+    Functions: {
+      book_slot_atomic: {
+        Args: {
+          p_slot_id: string;
+          p_reader_id: string;
+          p_article_id?: string;
+          p_notes?: string;
+        };
+        Returns: {
+          success: boolean;
+          booking_id?: string;
+          slot_id?: string;
+          error_code?: string;
+          message: string;
+        };
+      };
+      cancel_booking_atomic: {
+        Args: {
+          p_booking_id: string;
+          p_user_id: string;
+        };
+        Returns: {
+          success: boolean;
+          error_code?: string;
+          message: string;
         };
       };
     };
@@ -303,3 +334,23 @@ export type Article = Database['public']['Tables']['articles']['Row'];
 export type Comment = Database['public']['Tables']['comments']['Row'];
 export type AvailabilitySlot = Database['public']['Tables']['availability_slots']['Row'];
 export type Booking = Database['public']['Tables']['bookings']['Row'];
+
+export interface EnrichedBookingSession {
+  id: string;
+  slotId: string;
+  authorId: string;
+  authorName: string;
+  authorAvatar: string;
+  authorTimezone: string;
+  readerId: string;
+  readerName: string;
+  readerEmail: string;
+  readerAvatar: string;
+  articleId?: string;
+  articleTitle?: string;
+  articleSlug?: string;
+  startTime: string; // ISO UTC
+  endTime: string;   // ISO UTC
+  status: BookingStatus;
+  notes?: string;
+}

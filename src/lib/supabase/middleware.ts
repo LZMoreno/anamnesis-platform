@@ -70,5 +70,15 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
+  // 3. RBAC: Panel de Autor y Disponibilidad (/dashboard/autor/*) -> Permitido para 'author' y 'editor'
+  if (pathname.startsWith('/dashboard/autor')) {
+    const isAuthorOrEditor = currentRole === 'author' || currentRole === 'editor';
+    if (!isAuthorOrEditor) {
+      const forbiddenUrl = new URL('/403', request.url);
+      forbiddenUrl.searchParams.set('reason', 'unauthorized_author_dashboard');
+      return NextResponse.rewrite(forbiddenUrl, { status: 403 });
+    }
+  }
+
   return response;
 }

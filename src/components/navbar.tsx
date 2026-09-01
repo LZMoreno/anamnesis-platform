@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import {
   BookOpen,
   Calendar,
+  CalendarCheck,
   ChevronRight,
   Edit3,
   Feather,
@@ -36,12 +37,11 @@ export function Navbar() {
     { href: '/', label: 'Inicio', icon: Sparkles },
     { href: '/circulo/cronica', label: 'Crónica', icon: Feather },
     { href: '/circulo/ensayo-medico', label: 'Ensayo Médico', icon: BookOpen },
-    { href: '/circulo/resena-literaria', label: 'Reseña Literaria', icon: Layers },
-    { href: '/agenda', label: 'Agenda & Tutorías', icon: Calendar },
+    { href: '/agenda', label: 'Agenda & Citas (30m)', icon: Calendar },
     {
-      href: '/autor/bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb',
-      label: 'Autor Destacado',
-      icon: User,
+      href: '/dashboard/autor/disponibilidad',
+      label: 'Mi Día & Slots',
+      icon: CalendarCheck,
     },
     {
       href: '/editor/nuevo',
@@ -71,7 +71,10 @@ export function Navbar() {
           <nav className="hidden lg:flex items-center gap-1">
             {navLinks.map((link) => {
               const Icon = link.icon;
-              const isActive = pathname === link.href || (link.href === '/editor/nuevo' && pathname.startsWith('/editor'));
+              const isActive =
+                pathname === link.href ||
+                (link.href === '/editor/nuevo' && pathname.startsWith('/editor')) ||
+                (link.href === '/dashboard/autor/disponibilidad' && pathname.startsWith('/dashboard/autor'));
               return (
                 <Link
                   key={link.href}
@@ -149,7 +152,10 @@ export function Navbar() {
           <nav className="space-y-1">
             {navLinks.map((link) => {
               const Icon = link.icon;
-              const isActive = pathname === link.href || (link.href === '/editor/nuevo' && pathname.startsWith('/editor'));
+              const isActive =
+                pathname === link.href ||
+                (link.href === '/editor/nuevo' && pathname.startsWith('/editor')) ||
+                (link.href === '/dashboard/autor/disponibilidad' && pathname.startsWith('/dashboard/autor'));
               return (
                 <Link
                   key={link.href}
@@ -172,12 +178,12 @@ export function Navbar() {
           </nav>
 
           <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/40">
-            <Link href="/editor/nuevo" className="w-full">
+            <Link href="/dashboard/autor/disponibilidad" className="w-full">
               <Button
                 variant="outline"
                 className="w-full min-h-[44px] gap-2 text-xs font-medium"
               >
-                <PenTool className="w-4 h-4" /> Redactar
+                <CalendarCheck className="w-4 h-4" /> Mi Día & Slots
               </Button>
             </Link>
             <Link href="/circulo/cronica/editor" className="w-full">

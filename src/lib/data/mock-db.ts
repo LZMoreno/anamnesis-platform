@@ -68,6 +68,41 @@ export interface CircleDetail {
   tags: string[];
 }
 
+export interface AvailabilitySlotItem {
+  id: string;
+  authorId: string;
+  authorName: string;
+  authorAvatar: string;
+  authorTimezone: string;
+  startTime: string; // ISO 8601 UTC
+  endTime: string;   // ISO 8601 UTC
+  isBooked: boolean;
+  createdAt: string;
+}
+
+export interface BookingSessionItem {
+  id: string;
+  slotId: string;
+  authorId: string;
+  authorName: string;
+  authorAvatar: string;
+  authorEmail: string;
+  authorTimezone: string;
+  readerId: string;
+  readerName: string;
+  readerEmail: string;
+  readerAvatar: string;
+  articleId?: string;
+  articleTitle?: string;
+  articleSlug?: string;
+  circleSlug?: string;
+  startTime: string; // ISO 8601 UTC
+  endTime: string;   // ISO 8601 UTC
+  status: 'confirmed' | 'cancelled';
+  notes?: string;
+  createdAt: string;
+}
+
 export const INITIAL_AUTHORS: Record<string, AuthorProfile> = {
   'bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb': {
     id: 'bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb',
@@ -76,7 +111,7 @@ export const INITIAL_AUTHORS: Record<string, AuthorProfile> = {
     bio: 'Médico internista en hospital universitario y ensayista. Investiga la intersección entre el diagnóstico clínico, el dolor humano y la memoria sensorial en la práctica médica.',
     avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
     role: 'author',
-    timezone: 'America/Bogota (UTC-5)',
+    timezone: 'America/Bogota',
     specialty: 'Medicina Interna & Ensayística Clínica',
     location: 'Bogotá, Colombia',
     joinedDate: 'Marzo 2024',
@@ -88,7 +123,7 @@ export const INITIAL_AUTHORS: Record<string, AuthorProfile> = {
     bio: 'Crítica literaria, docente universitaria y editora en jefe de Anamnesis. Curadora de voces emergentes en no-ficción, crónica urbana y ensayo contemporáneo.',
     avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&auto=format&fit=crop&q=80',
     role: 'editor',
-    timezone: 'America/Argentina/Buenos_Aires (UTC-3)',
+    timezone: 'America/Buenos_Aires',
     specialty: 'Crítica Literaria & Narrativas de No-Ficción',
     location: 'Buenos Aires, Argentina',
     joinedDate: 'Enero 2024',
@@ -100,7 +135,7 @@ export const INITIAL_AUTHORS: Record<string, AuthorProfile> = {
     bio: 'Estudiante de literatura comparada y asidua lectora de crónicas urbanas, bioética y filosofía del cuidado.',
     avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
     role: 'reader',
-    timezone: 'America/Mexico_City (UTC-6)',
+    timezone: 'America/Mexico_City',
     specialty: 'Literatura Comparada & Bioética',
     location: 'Ciudad de México, México',
     joinedDate: 'Abril 2024',
@@ -349,7 +384,149 @@ export const INITIAL_INVITATIONS: Record<string, CircleInvitationItem[]> = {
   'resena-literaria': [],
 };
 
-// Helper Functions
+// ==============================================================================
+// MOCK DATA: SLOTS DE DISPONIBILIDAD (30 MINUTOS) & RESERVAS DE SESIONES
+// ==============================================================================
+
+// Fechas relativas en UTC para asegurar que siempre haya sesiones hoy y en los próximos días
+const todayIso = new Date().toISOString().split('T')[0];
+const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+const dayAfter = new Date(Date.now() + 172800000).toISOString().split('T')[0];
+
+export let INITIAL_SLOTS: AvailabilitySlotItem[] = [
+  // Sesiones de hoy (Dr. Julián Sotomayor)
+  {
+    id: 'slot-today-1',
+    authorId: 'bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb',
+    authorName: 'Dr. Julián Sotomayor',
+    authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+    authorTimezone: 'America/Bogota',
+    startTime: `${todayIso}T15:00:00.000Z`,
+    endTime: `${todayIso}T15:30:00.000Z`,
+    isBooked: true,
+    createdAt: '2026-09-01T00:00:00.000Z',
+  },
+  {
+    id: 'slot-today-2',
+    authorId: 'bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb',
+    authorName: 'Dr. Julián Sotomayor',
+    authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+    authorTimezone: 'America/Bogota',
+    startTime: `${todayIso}T16:00:00.000Z`,
+    endTime: `${todayIso}T16:30:00.000Z`,
+    isBooked: true,
+    createdAt: '2026-09-01T00:00:00.000Z',
+  },
+  {
+    id: 'slot-today-3',
+    authorId: 'bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb',
+    authorName: 'Dr. Julián Sotomayor',
+    authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+    authorTimezone: 'America/Bogota',
+    startTime: `${todayIso}T17:00:00.000Z`,
+    endTime: `${todayIso}T17:30:00.000Z`,
+    isBooked: false,
+    createdAt: '2026-09-01T00:00:00.000Z',
+  },
+  // Sesiones de mañana (Dr. Julián Sotomayor)
+  {
+    id: 'slot-tmrw-1',
+    authorId: 'bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb',
+    authorName: 'Dr. Julián Sotomayor',
+    authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+    authorTimezone: 'America/Bogota',
+    startTime: `${tomorrow}T14:00:00.000Z`,
+    endTime: `${tomorrow}T14:30:00.000Z`,
+    isBooked: false,
+    createdAt: '2026-09-01T00:00:00.000Z',
+  },
+  {
+    id: 'slot-tmrw-2',
+    authorId: 'bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb',
+    authorName: 'Dr. Julián Sotomayor',
+    authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+    authorTimezone: 'America/Bogota',
+    startTime: `${tomorrow}T14:30:00.000Z`,
+    endTime: `${tomorrow}T15:00:00.000Z`,
+    isBooked: false,
+    createdAt: '2026-09-01T00:00:00.000Z',
+  },
+  // Sesiones de Elena Rocafuerte (Editora / Autora)
+  {
+    id: 'slot-elena-1',
+    authorId: 'cccccccc-3333-4333-c333-cccccccccccc',
+    authorName: 'Elena Rocafuerte',
+    authorAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
+    authorTimezone: 'America/Buenos_Aires',
+    startTime: `${tomorrow}T18:00:00.000Z`,
+    endTime: `${tomorrow}T18:30:00.000Z`,
+    isBooked: false,
+    createdAt: '2026-09-01T00:00:00.000Z',
+  },
+  {
+    id: 'slot-elena-2',
+    authorId: 'cccccccc-3333-4333-c333-cccccccccccc',
+    authorName: 'Elena Rocafuerte',
+    authorAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
+    authorTimezone: 'America/Buenos_Aires',
+    startTime: `${dayAfter}T19:00:00.000Z`,
+    endTime: `${dayAfter}T19:30:00.000Z`,
+    isBooked: false,
+    createdAt: '2026-09-01T00:00:00.000Z',
+  },
+];
+
+export let INITIAL_BOOKINGS: BookingSessionItem[] = [
+  {
+    id: 'book-1',
+    slotId: 'slot-today-1',
+    authorId: 'bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb',
+    authorName: 'Dr. Julián Sotomayor',
+    authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+    authorEmail: 'autor@anamnesis.com',
+    authorTimezone: 'America/Bogota',
+    readerId: 'aaaaaaaa-1111-4111-a111-aaaaaaaaaaaa',
+    readerName: 'Sofía Valenzuela',
+    readerEmail: 'lector@anamnesis.com',
+    readerAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+    articleId: '44444444-4444-4444-4444-444444444441',
+    articleTitle: 'El peso de la palabra no dicha: Apuntes sobre la anamnesis en urgencias',
+    articleSlug: 'el-peso-de-la-palabra-no-dicha',
+    circleSlug: 'ensayo-medico',
+    startTime: `${todayIso}T15:00:00.000Z`,
+    endTime: `${todayIso}T15:30:00.000Z`,
+    status: 'confirmed',
+    notes: 'Quisiera profundizar en la tesis del capítulo 2 sobre la relación entre el luto por el oficio y los síntomas somáticos en urgencias.',
+    createdAt: '2026-08-30T10:00:00.000Z',
+  },
+  {
+    id: 'book-2',
+    slotId: 'slot-today-2',
+    authorId: 'bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb',
+    authorName: 'Dr. Julián Sotomayor',
+    authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+    authorEmail: 'autor@anamnesis.com',
+    authorTimezone: 'America/Bogota',
+    readerId: 'reader-rodrigo',
+    readerName: 'Rodrigo Palma',
+    readerEmail: 'rodrigo.palma@letrasvivas.cl',
+    readerAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+    articleId: '44444444-4444-4444-4444-444444444442',
+    articleTitle: 'Madrugadas en el tranvía fantasma: Los últimos maquinistas de la estación sur',
+    articleSlug: 'madrugadas-en-el-tranvia-fantasma',
+    circleSlug: 'cronica',
+    startTime: `${todayIso}T16:00:00.000Z`,
+    endTime: `${todayIso}T16:30:00.000Z`,
+    status: 'confirmed',
+    notes: 'Revisión de técnicas de inmersión etnográfica y archivo oral en crónicas de transporte urbano.',
+    createdAt: '2026-08-31T14:30:00.000Z',
+  },
+];
+
+// ==============================================================================
+// RPCs ATÓMICAS & HELPERS DE CONSULTA
+// ==============================================================================
+
 export function getCircleBySlug(slug: string): CircleDetail | null {
   return INITIAL_CIRCLES[slug] || null;
 }
@@ -372,4 +549,188 @@ export function getCircleMembers(slug: string): CircleMemberItem[] {
 
 export function getCircleInvitations(slug: string): CircleInvitationItem[] {
   return INITIAL_INVITATIONS[slug] || [];
+}
+
+export function getAvailabilitySlots(authorId?: string, onlyAvailable = false): AvailabilitySlotItem[] {
+  let slots = [...INITIAL_SLOTS];
+  if (authorId) {
+    slots = slots.filter((s) => s.authorId === authorId);
+  }
+  if (onlyAvailable) {
+    slots = slots.filter((s) => !s.isBooked);
+  }
+  return slots.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+}
+
+export function getBookingsByAuthor(authorId: string): BookingSessionItem[] {
+  return INITIAL_BOOKINGS.filter((b) => b.authorId === authorId).sort(
+    (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+  );
+}
+
+export function getBookingsByReader(readerId: string): BookingSessionItem[] {
+  return INITIAL_BOOKINGS.filter((b) => b.readerId === readerId).sort(
+    (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+  );
+}
+
+/**
+ * Simulación de RPC Atómica en PostgreSQL: book_slot_atomic
+ * Incorpora bloqueo FOR UPDATE y protección ante Race Conditions
+ */
+export async function bookSlotAtomicMock(
+  slotId: string,
+  readerId: string,
+  articleId?: string,
+  notes?: string,
+  simulateRaceCondition = false
+): Promise<{ success: boolean; bookingId?: string; message: string; errorCode?: string }> {
+  // Simular latencia de red/base de datos
+  await new Promise((resolve) => setTimeout(resolve, 600));
+
+  const slotIndex = INITIAL_SLOTS.findIndex((s) => s.id === slotId);
+  if (slotIndex === -1) {
+    return {
+      success: false,
+      errorCode: 'SLOT_NOT_FOUND',
+      message: 'El bloque de disponibilidad no existe o fue eliminado.',
+    };
+  }
+
+  const slot = INITIAL_SLOTS[slotIndex];
+
+  // Simulación de Race Condition o doble reserva concurrente
+  if (slot.isBooked || simulateRaceCondition) {
+    return {
+      success: false,
+      errorCode: 'ALREADY_BOOKED',
+      message: 'Este espacio acaba de ser reservado por otro lector. Por favor, selecciona otro horario disponible.',
+    };
+  }
+
+  // 1. Marcar slot como reservado
+  INITIAL_SLOTS[slotIndex] = { ...slot, isBooked: true };
+
+  const reader = INITIAL_AUTHORS[readerId] || {
+    id: readerId,
+    fullName: 'Sofía Valenzuela',
+    email: 'lector@anamnesis.com',
+    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+  };
+
+  const article = INITIAL_ARTICLES.find((a) => a.id === articleId);
+
+  const newBookingId = `book-${Date.now()}`;
+  const newBooking: BookingSessionItem = {
+    id: newBookingId,
+    slotId: slot.id,
+    authorId: slot.authorId,
+    authorName: slot.authorName,
+    authorAvatar: slot.authorAvatar,
+    authorEmail: 'autor@anamnesis.com',
+    authorTimezone: slot.authorTimezone,
+    readerId: reader.id,
+    readerName: reader.fullName,
+    readerEmail: reader.email,
+    readerAvatar: reader.avatarUrl,
+    articleId: article?.id,
+    articleTitle: article?.title,
+    articleSlug: article?.slug,
+    circleSlug: article?.circleSlug,
+    startTime: slot.startTime,
+    endTime: slot.endTime,
+    status: 'confirmed',
+    notes: notes || 'Mentoría y análisis clínico.',
+    createdAt: new Date().toISOString(),
+  };
+
+  INITIAL_BOOKINGS.unshift(newBooking);
+
+  return {
+    success: true,
+    bookingId: newBookingId,
+    message: '¡Sesión de 30 minutos confirmada exitosamente!',
+  };
+}
+
+/**
+ * Simulación de RPC Atómica en PostgreSQL: cancel_booking_atomic
+ * Aplica regla estricta de 2 horas de anticipación
+ */
+export async function cancelBookingAtomicMock(
+  bookingId: string,
+  userId: string
+): Promise<{ success: boolean; message: string; errorCode?: string }> {
+  await new Promise((resolve) => setTimeout(resolve, 500));
+
+  const bookingIndex = INITIAL_BOOKINGS.findIndex((b) => b.id === bookingId);
+  if (bookingIndex === -1) {
+    return {
+      success: false,
+      errorCode: 'BOOKING_NOT_FOUND',
+      message: 'La reserva solicitada no existe.',
+    };
+  }
+
+  const booking = INITIAL_BOOKINGS[bookingIndex];
+
+  // Verificar regla de 2 horas
+  const startMillis = new Date(booking.startTime).getTime();
+  const diffHours = (startMillis - Date.now()) / (1000 * 60 * 60);
+
+  if (diffHours < 2) {
+    return {
+      success: false,
+      errorCode: 'CANCELLATION_DEADLINE_PASSED',
+      message: 'Las cancelaciones solo se permiten con un mínimo de 2 horas de anticipación al inicio de la sesión.',
+    };
+  }
+
+  // Actualizar estado de la reserva
+  INITIAL_BOOKINGS[bookingIndex] = { ...booking, status: 'cancelled' };
+
+  // Liberar el slot asociado
+  const slotIndex = INITIAL_SLOTS.findIndex((s) => s.id === booking.slotId);
+  if (slotIndex !== -1) {
+    INITIAL_SLOTS[slotIndex] = { ...INITIAL_SLOTS[slotIndex], isBooked: false };
+  }
+
+  return {
+    success: true,
+    message: 'La sesión ha sido cancelada exitosamente y el horario se ha liberado.',
+  };
+}
+
+/**
+ * Crear nuevo bloque de 30 minutos
+ */
+export async function createSlotMock(
+  authorId: string,
+  startTimeIso: string,
+  endTimeIso: string
+): Promise<AvailabilitySlotItem> {
+  const author = INITIAL_AUTHORS[authorId] || INITIAL_AUTHORS['bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb'];
+  const newSlot: AvailabilitySlotItem = {
+    id: `slot-${Date.now()}`,
+    authorId: author.id,
+    authorName: author.fullName,
+    authorAvatar: author.avatarUrl,
+    authorTimezone: author.timezone,
+    startTime: startTimeIso,
+    endTime: endTimeIso,
+    isBooked: false,
+    createdAt: new Date().toISOString(),
+  };
+
+  INITIAL_SLOTS.push(newSlot);
+  return newSlot;
+}
+
+/**
+ * Eliminar bloque de disponibilidad
+ */
+export async function deleteSlotMock(slotId: string): Promise<boolean> {
+  const initialLength = INITIAL_SLOTS.length;
+  INITIAL_SLOTS = INITIAL_SLOTS.filter((s) => s.id !== slotId);
+  return INITIAL_SLOTS.length < initialLength;
 }
