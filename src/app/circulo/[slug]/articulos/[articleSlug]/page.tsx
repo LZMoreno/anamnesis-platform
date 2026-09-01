@@ -102,9 +102,9 @@ export default function ArticlePage({ params }: ArticlePageProps) {
 
   return (
     <div className="w-full max-w-full overflow-x-hidden pb-24 bg-background">
-      {/* 1. Barra superior de progreso de lectura */}
+      {/* Barra superior de progreso de lectura fija en el borde superior */}
       <div
-        className="fixed top-16 left-0 h-1 bg-primary z-50 transition-all duration-150 ease-out shadow-sm"
+        className="fixed top-0 left-0 h-1 bg-primary z-50 transition-all duration-150 ease-out shadow-sm"
         style={{ width: `${readingProgress}%` }}
         role="progressbar"
         aria-valuenow={Math.round(readingProgress)}
@@ -112,8 +112,8 @@ export default function ArticlePage({ params }: ArticlePageProps) {
         aria-valuemax={100}
       />
 
-      {/* Header Navigation & Reading Preferences */}
-      <div className="sticky top-16 z-30 border-b border-border/40 bg-background/95 backdrop-blur py-2.5">
+      {/* Header Navigation & Reading Preferences (Sin solapamientos) */}
+      <div className="border-b border-border/40 bg-muted/20 py-3 mb-4">
         <div className="container mx-auto max-w-4xl px-3 sm:px-6 flex items-center justify-between text-xs">
           <Link
             href={`/circulo/${params.slug}`}
@@ -124,10 +124,10 @@ export default function ArticlePage({ params }: ArticlePageProps) {
 
           {/* Reading Controls Toolbar (Font Size & Typeface) */}
           <div className="flex items-center gap-2">
-            <div className="hidden sm:flex items-center gap-1 bg-muted/40 p-1 rounded-lg border border-border/40">
+            <div className="hidden sm:flex items-center gap-1 bg-card p-1 rounded-lg border border-border/60 shadow-sm">
               <button
                 onClick={() => setFontFamily(fontFamily === 'serif' ? 'sans' : 'serif')}
-                className="px-2 py-1 min-h-[32px] rounded text-[11px] font-semibold text-muted-foreground hover:text-foreground transition"
+                className="px-2.5 py-1 min-h-[32px] rounded text-[11px] font-semibold text-muted-foreground hover:text-foreground transition"
                 title="Alternar tipografía Serif / Sans"
               >
                 {fontFamily === 'serif' ? 'Serif' : 'Sans'}
@@ -137,7 +137,7 @@ export default function ArticlePage({ params }: ArticlePageProps) {
 
               <button
                 onClick={() => setFontSize(fontSize === 'base' ? 'lg' : fontSize === 'lg' ? 'xl' : 'base')}
-                className="px-2 py-1 min-h-[32px] rounded text-[11px] font-semibold text-muted-foreground hover:text-foreground transition flex items-center gap-1"
+                className="px-2.5 py-1 min-h-[32px] rounded text-[11px] font-semibold text-muted-foreground hover:text-foreground transition flex items-center gap-1"
                 title="Ajustar tamaño de letra"
               >
                 <Type className="w-3 h-3" />
@@ -169,19 +169,19 @@ export default function ArticlePage({ params }: ArticlePageProps) {
         </div>
       )}
 
-      {/* Main Article Container */}
-      <article className="container mx-auto max-w-3xl px-3 sm:px-6 pt-8 sm:pt-12 space-y-8">
+      {/* Main Article Container con espacio superior limpio */}
+      <article className="container mx-auto max-w-3xl px-3 sm:px-6 pt-4 sm:pt-6 space-y-8">
         {/* Article Header & Metadata */}
-        <header className="space-y-6">
+        <header className="space-y-5">
           <div className="flex flex-wrap items-center gap-2">
             <Link href={`/circulo/${article.circleSlug}`}>
-              <Badge variant="outline" className="text-xs uppercase tracking-wider font-semibold hover:bg-muted">
+              <Badge variant="outline" className="text-xs uppercase tracking-wider font-semibold hover:bg-muted py-1">
                 {article.circleName}
               </Badge>
             </Link>
 
             {article.tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-[11px] font-normal">
+              <Badge key={tag} variant="secondary" className="text-[11px] font-normal py-1">
                 #{tag}
               </Badge>
             ))}

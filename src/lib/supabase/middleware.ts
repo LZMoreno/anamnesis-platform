@@ -9,7 +9,7 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://mock-supabase.supabase.co';
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://vjviuhreswqsjmyxxumr.supabase.co';
   const supabaseAnonKey =
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
@@ -59,7 +59,7 @@ export async function updateSession(request: NextRequest) {
     if (!isEditor) {
       const forbiddenUrl = new URL('/403', request.url);
       forbiddenUrl.searchParams.set('reason', 'unauthorized_circle_editor');
-      return NextResponse.rewrite(forbiddenUrl, { status: 403 });
+      return NextResponse.redirect(forbiddenUrl);
     }
   }
 
@@ -69,7 +69,7 @@ export async function updateSession(request: NextRequest) {
     if (!canWrite) {
       const forbiddenUrl = new URL('/403', request.url);
       forbiddenUrl.searchParams.set('reason', 'unauthorized_author_access');
-      return NextResponse.rewrite(forbiddenUrl, { status: 403 });
+      return NextResponse.redirect(forbiddenUrl);
     }
   }
 
@@ -79,7 +79,7 @@ export async function updateSession(request: NextRequest) {
     if (!isAuthorOrEditor) {
       const forbiddenUrl = new URL('/403', request.url);
       forbiddenUrl.searchParams.set('reason', 'unauthorized_author_dashboard');
-      return NextResponse.rewrite(forbiddenUrl, { status: 403 });
+      return NextResponse.redirect(forbiddenUrl);
     }
   }
 
