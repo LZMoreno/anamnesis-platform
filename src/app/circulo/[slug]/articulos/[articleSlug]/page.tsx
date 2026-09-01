@@ -1,6 +1,20 @@
+'use client';
+
+import * as React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, Bookmark, Clock, MessageSquare, Share2, Sparkles, User } from 'lucide-react';
+import {
+  ArrowLeft,
+  Bookmark,
+  CheckCircle2,
+  Clock,
+  Loader2,
+  MessageSquare,
+  Send,
+  Share2,
+  Sparkles,
+  User,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar } from '@/components/ui/avatar';
@@ -16,9 +30,11 @@ interface ArticlePageProps {
 export default function ArticlePage({ params }: ArticlePageProps) {
   const article = {
     title: 'El peso de la palabra no dicha: Apuntes sobre la anamnesis en urgencias',
+    slug: params.articleSlug,
     circleSlug: params.slug,
     circleName: 'Ensayo Médico',
     authorId: 'bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb',
+    authorEmail: 'autor@anamnesis.com',
     author: 'Dr. Julián Sotomayor',
     authorRole: 'Médico Internista & Ensayista',
     authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
@@ -32,7 +48,7 @@ export default function ArticlePage({ params }: ArticlePageProps) {
       'Recuerdo a don Mateo, un relojero de setenta y cuatro años con disnea progresiva. Sus gases arteriales eran limpios; su ecocardiograma mostraba apenas la rigidez propia de las décadas. No fue hasta que le pregunté por su taller que brotó la verdadera causa de su asfixia: hacía tres semanas había tenido que vender su última lupa de precisión para costear la pensión. El corazón humano no distingue entre la hipoxia tisular y el luto por el oficio perdido.',
       'Recuperar la escucha en el acto médico no es un capricho poético; es la forma más rigurosa de diagnóstico que conocemos.',
     ],
-    comments: [
+    initialComments: [
       {
         id: '1',
         author: 'Sofía Valenzuela',
@@ -50,6 +66,53 @@ export default function ArticlePage({ params }: ArticlePageProps) {
         ],
       },
     ],
+  };
+
+  const [comments, setComments] = React.useState(article.initialComments);
+  const [commentInput, setCommentInput] = React.useState('');
+  const [submitting, setSubmitting] = React.useState(false);
+  const [notification, setNotification] = React.useState<string | null>(null);
+
+  const handlePostComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commentInput.trim()) return;
+
+    setSubmitting(true);
+    setNotification(null);
+
+    const newComment = {
+      id: `comment-${Date.now()}`,
+      author: 'Sofía Valenzuela (Lector)',
+      authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+      date: 'Hace un momento',
+      content: commentInput.trim(),
+      replies: [],
+    };
+
+    // Disparar notificación por correo vía Resend (/api/email/new-comment)
+    try {
+      await fetch('/api/email/new-comment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          articleTitle: article.title,
+          articleSlug: article.slug,
+          circleSlug: article.circleSlug,
+          authorEmail: article.authorEmail,
+          authorName: article.author,
+          commenterName: 'Sofía Valenzuela',
+          commentContent: commentInput.trim(),
+        }),
+      });
+    } catch (err) {
+      console.warn('Error en notificación por correo:', err);
+    }
+
+    setComments([...comments, newComment]);
+    setCommentInput('');
+    setSubmitting(false);
+    setNotification('¡Comentario publicado! Se ha notificado al autor por correo electrónico.');
+    setTimeout(() => setNotification(null), 4000);
   };
 
   return (
@@ -161,31 +224,57 @@ export default function ArticlePage({ params }: ArticlePageProps) {
         <section className="pt-10 space-y-6">
           <div className="flex items-center gap-2 font-serif text-2xl font-bold">
             <MessageSquare className="w-5 h-5 text-primary" />
-            Comentarios & Diálogo Clínico
+            Comentarios & Diálogo Clínico ({comments.length})
           </div>
 
-          {/* Comment Input */}
-          <div className="space-y-3 rounded-xl border p-4 bg-card">
+          {/* Feedback Toast */}
+          {notification && (
+            <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2 animate-in fade-in duration-200">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>{notification}</span>
+            </div>
+          )}
+
+          {/* Comment Input Form */}
+          <form onSubmit={handlePostComment} className="space-y-3 rounded-xl border p-4 bg-card">
             <textarea
               className="w-full bg-transparent text-sm resize-none focus:outline-none placeholder:text-muted-foreground"
               rows={3}
-              placeholder="Escribe una reflexión o pregunta sobre este manuscrito..."
+              placeholder="Escribe una reflexión, duda metodológica o pregunta sobre este manuscrito..."
+              value={commentInput}
+              onChange={(e) => setCommentInput(e.target.value)}
+              required
             />
-            <div className="flex justify-end border-t border-border/40 pt-3">
-              <Button className="min-h-[44px] text-xs font-medium">
-                Publicar Comentario
+            <div className="flex items-center justify-between border-t border-border/40 pt-3">
+              <span className="text-[11px] text-muted-foreground">
+                Notifica automáticamente al autor al publicar
+              </span>
+              <Button
+                type="submit"
+                disabled={submitting || !commentInput.trim()}
+                className="min-h-[44px] text-xs font-semibold gap-1.5 bg-primary hover:bg-primary/90 px-4"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Publicando...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-3.5 h-3.5" /> Publicar Comentario
+                  </>
+                )}
               </Button>
             </div>
-          </div>
+          </form>
 
           {/* Threaded Comments List */}
           <div className="space-y-4">
-            {article.comments.map((c) => (
+            {comments.map((c) => (
               <div key={c.id} className="rounded-xl border p-4 bg-card/60 space-y-3">
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
                     <Avatar src={c.authorAvatar} fallback="SV" className="w-7 h-7" />
-                    <span className="font-medium">{c.author}</span>
+                    <span className="font-medium text-foreground">{c.author}</span>
                   </div>
                   <span className="text-muted-foreground">{c.date}</span>
                 </div>
@@ -199,7 +288,7 @@ export default function ArticlePage({ params }: ArticlePageProps) {
                     <div className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2">
                         <Avatar src={r.authorAvatar} fallback="JS" className="w-6 h-6" />
-                        <span className="font-medium text-primary">{r.author} (Autor)</span>
+                        <span className="font-medium text-primary">{r.author}</span>
                       </div>
                       <span className="text-muted-foreground text-[10px]">{r.date}</span>
                     </div>

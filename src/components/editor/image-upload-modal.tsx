@@ -21,7 +21,7 @@ export function ImageUploadModal({
   const [altText, setAltText] = React.useState('');
   const [caption, setCaption] = React.useState('');
   const [uploading, setUploading] = React.useState(false);
-  const [progress, setProgress] = React.useState(0);
+  const [uploadError, setUploadError] = React.useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -35,30 +35,37 @@ export function ImageUploadModal({
     setCaption('');
   };
 
-  const handleSimulatedFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setUploading(true);
-    setProgress(20);
+    setUploadError(null);
 
-    // Simulación de carga en Supabase Storage (bucket 'articles')
-    const timer1 = setTimeout(() => setProgress(60), 300);
-    const timer2 = setTimeout(() => setProgress(90), 600);
-    const timer3 = setTimeout(() => {
-      setProgress(100);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('bucket', 'articles');
+
+      const res = await fetch('/api/storage/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const json = await res.json();
+
+      if (json.success && json.url) {
+        setImageUrl(json.url);
+        if (!altText) setAltText(file.name.replace(/\.[^/.]+$/, ''));
+      } else {
+        setUploadError(json.error || 'Error subiendo la imagen a Supabase Storage.');
+      }
+    } catch (err: any) {
+      console.error('Error en subida de archivo:', err);
+      setUploadError('Error de red al conectar con el servidor de almacenamiento.');
+    } finally {
       setUploading(false);
-      // Generar URL para visualización
-      const objectUrl = URL.createObjectURL(file);
-      setImageUrl(objectUrl);
-      if (!altText) setAltText(file.name.replace(/\.[^/.]+$/, ''));
-    }, 900);
-
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
-    };
+    }
   };
 
   return (
@@ -127,36 +134,31 @@ export function ImageUploadModal({
               <div className="border-2 border-dashed border-border/80 rounded-xl p-5 text-center hover:border-primary/60 transition cursor-pointer relative bg-muted/20">
                 <input
                   type="file"
-                  accept="image/*"
-                  onChange={handleSimulatedFileUpload}
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={handleFileUpload}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   disabled={uploading}
                 />
                 <UploadCloud className="w-8 h-8 mx-auto text-muted-foreground mb-1" />
                 <div className="text-xs font-medium">Arrastra una imagen o haz clic para buscar</div>
-                <div className="text-[10px] text-muted-foreground mt-0.5">PNG, JPG, WebP hasta 10MB</div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">PNG, JPG, WebP, GIF hasta 10MB</div>
               </div>
 
               {uploading && (
-                <div className="space-y-1">
-                  <div className="flex justify-between text-[11px] text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Loader2 className="w-3 h-3 animate-spin" /> Subiendo a bucket 'articles'...
-                    </span>
-                    <span>{progress}%</span>
-                  </div>
-                  <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary transition-all duration-200"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
+                <div className="flex items-center gap-2 text-xs text-primary">
+                  <Loader2 className="w-4 h-4 animate-spin" /> Subiendo al bucket seguro de Supabase Storage...
+                </div>
+              )}
+
+              {uploadError && (
+                <div className="text-xs text-destructive bg-destructive/10 p-2 rounded">
+                  {uploadError}
                 </div>
               )}
 
               {imageUrl && !uploading && (
                 <div className="text-xs text-emerald-600 font-medium">
-                  ✓ Imagen cargada y lista para insertar
+                  ✓ Imagen cargada exitosamente en el servidor
                 </div>
               )}
             </div>

@@ -136,10 +136,31 @@ export default function AgendaPage() {
       loadData();
       const newBook = getBookingsByReader(readerId).find((b) => b.id === res.bookingId);
 
+      // Enviar correo transaccional en segundo plano vía Resend (/api/email/booking-confirmation)
+      if (newBook) {
+        fetch('/api/email/booking-confirmation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bookingId: newBook.id,
+            startTime: newBook.startTime,
+            endTime: newBook.endTime,
+            readerName: newBook.readerName,
+            readerEmail: newBook.readerEmail,
+            readerTimezone: userTimezone,
+            authorName: newBook.authorName,
+            authorEmail: newBook.authorEmail,
+            authorTimezone: newBook.authorTimezone,
+            articleTitle: newBook.articleTitle,
+            notes: newBook.notes,
+          }),
+        }).catch((err) => console.warn('Error enviando correo transaccional:', err));
+      }
+
       setFeedback({
         type: 'success',
         title: '¡Sesión de 30 Minutos Reservada!',
-        message: res.message,
+        message: `${res.message} Se ha enviado un correo de confirmación con los horarios convertidos a tu huso horario y al del autor.`,
         bookingToExport: newBook,
       });
     } else {

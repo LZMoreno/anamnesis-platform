@@ -1,64 +1,54 @@
 # Anamnesis — Plataforma Literaria y Ensayística
 
-Arquitectura base, sistema de gestión de círculos, editor TipTap y módulo de agendamiento de sesiones construido con **Next.js 14+ (App Router)**, **TypeScript**, **Tailwind CSS**, **Shadcn/UI**, **TipTap** y **Supabase** (PostgreSQL, Auth, RLS y RBAC).
+Arquitectura base, sistema de gestión de círculos, editor TipTap con IA, agendamiento de sesiones y servicios externos seguros con **Next.js 14+ (App Router)**, **TypeScript**, **Tailwind CSS**, **Shadcn/UI**, **TipTap**, **Google Gemini AI (@google/genai)**, **Resend** y **Supabase** (PostgreSQL, Auth, RLS y Storage).
 
 ---
 
-## 🌟 Características Implementadas
+## 🌟 Servicios y Características Implementadas
 
-1. **Módulo de Agendamiento de Sesiones de 30 Minutos (Lectores y Autores)**:
-   - **Panel de Disponibilidad del Autor (`/dashboard/autor/disponibilidad`)**:
-     - Configuración de bloques de 30 minutos y generador rápido por lotes (turno mañana/tarde).
-     - Vista *"Mi Día"*: Lista de citas de la jornada con datos del lector, manuscrito referenciado y estado.
-   - **Reserva para Lectores con Husos Horarios Dinámicos (`/agenda`)**:
-     - Detección automática y selector manual de husos horarios (`Intl.DateTimeFormat`) con recálculo en tiempo real.
-     - Modal de reserva con selección de manuscrito a discutir y notas.
-   - **Prevención de Doble Reserva (Race Conditions)**:
-     - Transacción atómica PostgreSQL con bloqueo explícito `SELECT ... FOR UPDATE` en `book_slot_atomic`.
-     - Mensaje amigable al usuario: *"Este espacio acaba de ser reservado por otro lector. Por favor, selecciona otro horario disponible."*
-   - **Regla de Cancelación a 2 Horas & Exportación `.ics`**:
-     - Cancelaciones permitidas solo con $\ge 2\text{h}$ de anticipación mediante `cancel_booking_atomic`.
-     - Exportación y descarga directa de archivos iCalendar `.ics` compatibles con Google Calendar, Apple Calendar y Outlook.
+1. **API Routes Seguras & Server Actions (Cero API Keys en el Cliente)**:
+   - **Asistente Editorial Gemini IA (`/api/ai/suggest`)**:
+     - Conectado a la API oficial de Google Gemini (`@google/genai`, modelo `gemini-2.5-flash`).
+     - Devuelve 3 propuestas de títulos, un resumen breve y 4 etiquetas temáticas en español.
+     - **Degradación Elegante (Graceful Degradation)**: Si no hay clave de IA o hay fallas de red, muestra un banner ligero sin bloquear ni congelar la pantalla.
+   - **Correos Transaccionales con Resend (`/api/email/*`)**:
+     - `/api/email/booking-confirmation`: Envía confirmación al Lector y al Autor calculando fechas/horas en sus respectivos husos horarios.
+     - `/api/email/new-comment`: Notifica al autor por correo electrónico al recibir un nuevo comentario en sus artículos.
+   - **Almacenamiento Seguro de Imágenes (`/api/storage/upload`)**:
+     - Validación de tipo MIME y tamaño ($\le 10\text{MB}$) con subida directa a Supabase Storage.
 
 2. **Editor de Artículos con TipTap (`/editor/[id]`)**:
-   - Formato enriquecido, citas de libros con la API de **Open Library**, sanitización estricta contra **XSS** y Microsoft Word con **DOMPurify**, optimización para textos de más de 9,000 palabras y autoguardado a 5 segundos con indicador visual.
-   - Toggle entre modo edición y vista previa de publicación editorial.
+   - Formato enriquecido, citas de libros de **Open Library API**, sanitización estricta contra **XSS** y Word con **DOMPurify**, optimización para textos de más de 9,000 palabras, autoguardado a 5 segundos con indicador visual y botón *"Asistente IA ✨"*.
 
-3. **Esquema de Base de Datos PostgreSQL en Supabase**:
-   - `profiles`, `circles`, `circle_members`, `circle_invitations`, `articles`, `comments`, `bookmarks`, `availability_slots`, `bookings`.
-   - Triggers automáticos y políticas **Row Level Security (RLS)** en todas las tablas.
+3. **Módulo de Agendamiento de Sesiones de 30 Minutos (Lectores y Autores)**:
+   - Panel de disponibilidad del autor y vista *"Mi Día"* (`/dashboard/autor/disponibilidad`).
+   - Reserva de lectores con conversión dinámica de husos horarios (`/agenda`).
+   - Prevención de doble reserva con transacción atómica PostgreSQL `SELECT ... FOR UPDATE`.
+   - Regla de cancelación a 2 horas y exportación de archivos `.ics` (Google / Apple / Outlook Calendar).
 
-4. **Rutas Dinámicas & Perfiles Públicos**:
-   - `/circulo/[slug]`, `/autor/[id]`, `/circulo/[slug]/editor/members`, `/circulo/[slug]/articulos/[articleSlug]`.
-   - Objetivos táctiles ergonómicos de mínimo **$44\text{px}$** (`min-h-[44px]`) y navegación móvil fluida desde **$320\text{px}$** sin desbordamiento horizontal.
+4. **Esquema PostgreSQL en Supabase con RLS**:
+   - 9 tablas completas con políticas de seguridad Row Level Security y triggers automáticos.
 
 ---
 
-## 🚀 Inicio Rápido
+## 🚀 Variables de Entorno
 
-### 1. Instalar Dependencias
-```bash
-npm install
-```
-
-### 2. Configurar Variables de Entorno
-Copia el archivo de ejemplo:
+Copia el archivo de ejemplo y configura tus claves (las claves privadas nunca se exponen al cliente):
 ```bash
 cp .env.example .env.local
 ```
-Rellena tus credenciales de Supabase (`NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY`).
 
-### 3. Aplicar Migraciones en Supabase (SQL Editor)
-1. `supabase/migrations/20240101000000_init_schema.sql`
-2. `supabase/migrations/20240102000000_circle_management_and_invitations.sql`
-3. `supabase/migrations/20240103000000_atomic_booking_system.sql`
-4. `supabase/seed.sql`
+```env
+# Claves públicas (cliente)
+NEXT_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key
 
-### 4. Servidor de Desarrollo
-```bash
-npm run dev
+# Claves privadas (solo servidor - nunca exponer en cliente)
+GEMINI_API_KEY=tu-google-gemini-api-key
+RESEND_API_KEY=re_tu_resend_api_key
+RESEND_FROM_EMAIL=Anamnesis <notificaciones@anamnesis.com>
+SUPABASE_SERVICE_ROLE_KEY=tu-service-role-key
 ```
-Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 
 ---
 
@@ -66,6 +56,6 @@ Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 
 ```bash
 git add .
-git commit -m "feat(booking): implement 30-min booking system, author availability dashboard, dynamic timezones and atomic race condition protection"
+git commit -m "feat(api): implement secure server routes for Gemini AI suggest, Resend transactional emails and Supabase storage upload"
 git push origin main
 ```

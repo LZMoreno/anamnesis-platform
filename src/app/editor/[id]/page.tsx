@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft,
+  Bot,
   Check,
   CheckCircle2,
   Clock,
@@ -26,6 +27,7 @@ import {
 } from 'lucide-react';
 import { TipTapEditor } from '@/components/editor/tiptap-editor';
 import { EditorPreview } from '@/components/editor/editor-preview';
+import { AIAssistantModal } from '@/components/editor/ai-assistant-modal';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -91,6 +93,7 @@ export default function ArticleEditorPage() {
     readingTimeMin: 3,
   });
   const [settingsOpen, setSettingsOpen] = React.useState(false);
+  const [aiModalOpen, setAiModalOpen] = React.useState(false);
 
   // Autor por defecto (Dr. Julián Sotomayor)
   const author = INITIAL_AUTHORS['bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb'];
@@ -156,6 +159,23 @@ export default function ArticleEditorPage() {
     setIsDirty(true);
   };
 
+  // Asistente IA Handlers
+  const handleApplyAITitle = (newTitle: string) => {
+    setTitle(newTitle);
+    setIsDirty(true);
+  };
+
+  const handleApplyAIExcerpt = (newExcerpt: string) => {
+    setExcerpt(newExcerpt);
+    setIsDirty(true);
+  };
+
+  const handleApplyAITags = (newTags: string[]) => {
+    const merged = Array.from(new Set([...tags, ...newTags]));
+    setTags(merged);
+    setIsDirty(true);
+  };
+
   return (
     <div className="w-full max-w-full overflow-x-hidden min-h-screen bg-background pb-24">
       {/* Top Application Header */}
@@ -210,8 +230,19 @@ export default function ArticleEditorPage() {
             )}
           </div>
 
-          {/* Right Actions: Status Selector, Preview Toggle, Settings, Save */}
-          <div className="flex items-center gap-1.5 sm:gap-2.5">
+          {/* Right Actions: AI Assistant, Status Selector, Preview Toggle, Settings, Save */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* AI Assistant Button */}
+            <Button
+              variant="outline"
+              onClick={() => setAiModalOpen(true)}
+              className="min-h-[44px] text-xs font-semibold gap-1.5 px-3 border-primary/40 bg-primary/5 hover:bg-primary/15 text-primary transition"
+              title="Asistente Editorial IA (Google Gemini)"
+            >
+              <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+              <span className="hidden sm:inline">Asistente IA</span>
+            </Button>
+
             {/* Status Selector */}
             <select
               value={status}
@@ -417,6 +448,18 @@ export default function ArticleEditorPage() {
           />
         )}
       </div>
+
+      {/* AI Assistant Modal (Google Gemini) */}
+      <AIAssistantModal
+        isOpen={aiModalOpen}
+        onClose={() => setAiModalOpen(false)}
+        contentHTML={contentHTML}
+        currentTitle={title}
+        circleSlug={circleSlug}
+        onApplyTitle={handleApplyAITitle}
+        onApplyExcerpt={handleApplyAIExcerpt}
+        onApplyTags={handleApplyAITags}
+      />
     </div>
   );
 }
