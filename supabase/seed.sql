@@ -2,14 +2,13 @@
 -- ANAMNESIS DATABASE SEED DATA (Español realista, sin Lorem Ipsum)
 -- ==============================================================================
 
--- UUIDs Fijos para referencias consistentes
+-- UUIDs Fijos para referencias consistentes:
 -- Lector: aaaaaaaa-1111-4111-a111-aaaaaaaaaaaa (lector@anamnesis.com)
 -- Autor:  bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb (autor@anamnesis.com)
 -- Editor: cccccccc-3333-4333-c333-cccccccccccc (editor@anamnesis.com)
 
 -- 1. Insertar Usuarios en auth.users
 -- Contraseña para los 3 usuarios: Password123! (hash bcrypt / argon2 standard de supabase)
--- Generado con: pgcrypto crypt('Password123!', gen_salt('bf'))
 INSERT INTO auth.users (
     id,
     instance_id,
@@ -143,7 +142,7 @@ VALUES
     ('33333333-3333-3333-3333-333333333333', 'bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb', 'moderator')
 ON CONFLICT (circle_id, user_id) DO NOTHING;
 
--- 5. Insertar Artículos (Con contenido extenso y realista en español)
+-- 5. Insertar Artículos
 INSERT INTO public.articles (
     id,
     circle_id,
@@ -264,45 +263,46 @@ VALUES
     ('aaaaaaaa-1111-4111-a111-aaaaaaaaaaaa', '44444444-4444-4444-4444-444444444443')
 ON CONFLICT (user_id, article_id) DO NOTHING;
 
--- 8. Insertar Slots de Disponibilidad para el Autor
+-- 8. Insertar Slots de Disponibilidad de 30 Minutos
 INSERT INTO public.availability_slots (id, author_id, start_time, end_time, is_booked)
 VALUES
 (
     '66666666-6666-6666-6666-666666666661',
     'bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb',
-    (CURRENT_DATE + interval '2 days' + time '16:00:00') AT TIME ZONE 'UTC',
-    (CURRENT_DATE + interval '2 days' + time '17:00:00') AT TIME ZONE 'UTC',
+    (CURRENT_DATE + interval '2 days' + time '15:00:00') AT TIME ZONE 'UTC',
+    (CURRENT_DATE + interval '2 days' + time '15:30:00') AT TIME ZONE 'UTC',
     true
 ),
 (
     '66666666-6666-6666-6666-666666666662',
     'bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb',
-    (CURRENT_DATE + interval '3 days' + time '10:00:00') AT TIME ZONE 'UTC',
-    (CURRENT_DATE + interval '3 days' + time '11:00:00') AT TIME ZONE 'UTC',
-    false
+    (CURRENT_DATE + interval '2 days' + time '16:00:00') AT TIME ZONE 'UTC',
+    (CURRENT_DATE + interval '2 days' + time '16:30:00') AT TIME ZONE 'UTC',
+    true
 ),
 (
     '66666666-6666-6666-6666-666666666663',
     'bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb',
-    (CURRENT_DATE + interval '4 days' + time '15:00:00') AT TIME ZONE 'UTC',
-    (CURRENT_DATE + interval '4 days' + time '16:00:00') AT TIME ZONE 'UTC',
+    (CURRENT_DATE + interval '3 days' + time '14:00:00') AT TIME ZONE 'UTC',
+    (CURRENT_DATE + interval '3 days' + time '14:30:00') AT TIME ZONE 'UTC',
     false
 ),
 (
     '66666666-6666-6666-6666-666666666664',
     'cccccccc-3333-4333-c333-cccccccccccc',
-    (CURRENT_DATE + interval '5 days' + time '17:00:00') AT TIME ZONE 'UTC',
-    (CURRENT_DATE + interval '5 days' + time '18:00:00') AT TIME ZONE 'UTC',
+    (CURRENT_DATE + interval '3 days' + time '18:00:00') AT TIME ZONE 'UTC',
+    (CURRENT_DATE + interval '3 days' + time '18:30:00') AT TIME ZONE 'UTC',
     false
 )
 ON CONFLICT (id) DO NOTHING;
 
 -- 9. Insertar Reserva Confirmada
-INSERT INTO public.bookings (id, slot_id, reader_id, status, notes)
+INSERT INTO public.bookings (id, slot_id, reader_id, article_id, status, notes)
 VALUES (
     '77777777-7777-7777-7777-777777777771',
     '66666666-6666-6666-6666-666666666661',
     'aaaaaaaa-1111-4111-a111-aaaaaaaaaaaa',
+    '44444444-4444-4444-4444-444444444441',
     'confirmed',
     'Deseo asesoría para estructurar un ensayo sobre la experiencia del aislamiento hospitalario durante la pandemia.'
 ) ON CONFLICT (id) DO NOTHING;
