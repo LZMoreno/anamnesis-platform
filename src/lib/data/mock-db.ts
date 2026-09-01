@@ -1,14 +1,38 @@
+// ==============================================================================
+// MOCK DATABASE & DATA STORE — PLATAFORMA ANAMNESIS
+// ==============================================================================
+
 export interface AuthorProfile {
   id: string;
-  email: string;
   fullName: string;
-  bio: string;
+  email: string;
   avatarUrl: string;
   role: 'reader' | 'author' | 'editor';
   timezone: string;
-  specialty: string;
-  location: string;
-  joinedDate: string;
+  bio: string;
+  specialty?: string;
+  location?: string;
+  joinedDate?: string;
+  circleSlugs: string[];
+}
+
+export interface CircleDetail {
+  id: string;
+  name: string;
+  slug: string;
+  coverUrl: string;
+  editorId: string;
+  editorName: string;
+  editorAvatar: string;
+  editorRole?: string;
+  editorBio?: string;
+  description: string;
+  manifesto: string;
+  longDescription?: string;
+  memberCount: number;
+  membersCount?: number;
+  articleCount: number;
+  tags?: string[];
 }
 
 export interface CircleArticleItem {
@@ -26,6 +50,7 @@ export interface CircleArticleItem {
   status: 'draft' | 'published' | 'archived';
   tags: string[];
   createdAt: string;
+  coverUrl?: string;
 }
 
 export interface CircleMemberItem {
@@ -36,7 +61,7 @@ export interface CircleMemberItem {
   userEmail: string;
   userAvatar: string;
   userRole: 'reader' | 'author' | 'editor';
-  circleRole: 'member' | 'moderator' | 'admin';
+  circleRole: 'admin' | 'moderator' | 'member';
   joinedAt: string;
 }
 
@@ -44,28 +69,12 @@ export interface CircleInvitationItem {
   id: string;
   circleId: string;
   email: string;
-  role: 'member' | 'moderator' | 'admin';
+  role: 'admin' | 'moderator' | 'member';
   invitedBy: string;
   invitedByName: string;
-  status: 'pending' | 'accepted' | 'revoked' | 'expired';
+  status: 'pending' | 'accepted' | 'declined';
   createdAt: string;
   expiresAt: string;
-}
-
-export interface CircleDetail {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  longDescription?: string;
-  coverUrl: string;
-  editorId: string;
-  editorName: string;
-  editorBio: string;
-  editorAvatar: string;
-  editorRole: string;
-  membersCount: number;
-  tags: string[];
 }
 
 export interface AvailabilitySlotItem {
@@ -75,7 +84,7 @@ export interface AvailabilitySlotItem {
   authorAvatar: string;
   authorTimezone: string;
   startTime: string; // ISO 8601 UTC
-  endTime: string;   // ISO 8601 UTC
+  endTime: string;   // ISO 8601 UTC (exactamente +30 minutos)
   isBooked: boolean;
   createdAt: string;
 }
@@ -103,90 +112,95 @@ export interface BookingSessionItem {
   createdAt: string;
 }
 
+export interface CommentItem {
+  id: string;
+  articleSlug: string;
+  userId: string;
+  userName: string;
+  userAvatar: string;
+  userRole: 'reader' | 'author' | 'editor';
+  parentId: string | null;
+  content: string;
+  isHidden: boolean;
+  createdAt: string;
+  replies?: CommentItem[];
+}
+
 export const INITIAL_AUTHORS: Record<string, AuthorProfile> = {
   'bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb': {
     id: 'bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb',
-    email: 'autor@anamnesis.com',
     fullName: 'Dr. Julián Sotomayor',
-    bio: 'Médico internista en hospital universitario y ensayista. Investiga la intersección entre el diagnóstico clínico, el dolor humano y la memoria sensorial en la práctica médica.',
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
+    email: 'autor@anamnesis.com',
+    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
     role: 'author',
     timezone: 'America/Bogota',
-    specialty: 'Medicina Interna & Ensayística Clínica',
-    location: 'Bogotá, Colombia',
-    joinedDate: 'Marzo 2024',
+    specialty: 'Médico Internista & Ensayista',
+    bio: 'Especialista en medicina interna hospitalaria con maestría en Bioética por la Universidad de Barcelona. Investiga las narrativas del dolor, el impacto del silencio clínico en el diagnóstico y la fenomenología del cuidado en las unidades de cuidados intensivos.',
+    circleSlugs: ['ensayo-medico', 'cronica'],
   },
   'cccccccc-3333-4333-c333-cccccccccccc': {
     id: 'cccccccc-3333-4333-c333-cccccccccccc',
-    email: 'editor@anamnesis.com',
     fullName: 'Elena Rocafuerte',
-    bio: 'Crítica literaria, docente universitaria y editora en jefe de Anamnesis. Curadora de voces emergentes en no-ficción, crónica urbana y ensayo contemporáneo.',
-    avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&auto=format&fit=crop&q=80',
+    email: 'editor@anamnesis.com',
+    avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
     role: 'editor',
     timezone: 'America/Buenos_Aires',
-    specialty: 'Crítica Literaria & Narrativas de No-Ficción',
-    location: 'Buenos Aires, Argentina',
-    joinedDate: 'Enero 2024',
+    specialty: 'Crítica Literaria & Editora General',
+    bio: 'Licenciada en Letras Hispánicas y docente universitaria. Fundadora de la mesa editorial de Crónica y Reseña en Anamnesis. Estudia la literatura confesional, los archivos orales y la memoria sensorial en el siglo XX.',
+    circleSlugs: ['cronica', 'resena-literaria', 'ensayo-medico'],
   },
   'aaaaaaaa-1111-4111-a111-aaaaaaaaaaaa': {
     id: 'aaaaaaaa-1111-4111-a111-aaaaaaaaaaaa',
-    email: 'lector@anamnesis.com',
     fullName: 'Sofía Valenzuela',
-    bio: 'Estudiante de literatura comparada y asidua lectora de crónicas urbanas, bioética y filosofía del cuidado.',
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
+    email: 'lector@anamnesis.com',
+    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
     role: 'reader',
     timezone: 'America/Mexico_City',
-    specialty: 'Literatura Comparada & Bioética',
-    location: 'Ciudad de México, México',
-    joinedDate: 'Abril 2024',
+    specialty: 'Investigadora en Humanidades Médicas',
+    bio: 'Lectora asidua de medicina narrativa y cronista independiente. Participa activamente en los círculos de discusión y tutorías de Anamnesis.',
+    circleSlugs: ['ensayo-medico', 'cronica'],
   },
 };
 
 export const INITIAL_CIRCLES: Record<string, CircleDetail> = {
-  'ensayo-medico': {
-    id: '33333333-3333-3333-3333-333333333333',
-    name: 'Ensayo Médico',
-    slug: 'ensayo-medico',
-    description: 'Reflexiones clínicas, fenomenología del cuerpo enfermo, dilemas de bioética y la anamnesis como puente entre ciencia y humanismo.',
-    longDescription: 'Este círculo reúne a médicos, filósofos, enfermeros y pacientes en torno a la narrativa de la enfermedad. Aquí la medicina deja de ser exclusivamente un protocolo técnico para restituir el valor insustituible de la palabra, la escucha activa y la experiencia corpórea del sufrimiento y la sanación.',
-    coverUrl: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=1200&auto=format&fit=crop&q=80',
-    editorId: 'cccccccc-3333-4333-c333-cccccccccccc',
-    editorName: 'Elena Rocafuerte',
-    editorBio: 'Editora en jefe de Anamnesis y curadora de ensayos de bioética y narrativa clínica.',
-    editorAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
-    editorRole: 'Editora Principal',
-    membersCount: 42,
-    tags: ['Medicina Narrativa', 'Bioética', 'Guardias Clínicas', 'Humanismo', 'Epistemología'],
-  },
   'cronica': {
     id: '22222222-2222-2222-2222-222222222222',
     name: 'Crónica',
     slug: 'cronica',
-    description: 'Relatos de no-ficción, periodismo narrativo, cartografías de la memoria urbana y testimonios de la vida cotidiana en América Latina.',
-    longDescription: 'El círculo de Crónica documenta los márgenes invisibles de las grandes urbes: los trabajadores nocturnos, los oficios extintos, los desplazamientos silenciosos y la resistencia cotidiana contada desde la inmersión directa en el territorio.',
-    coverUrl: 'https://images.unsplash.com/photo-1505686994434-e3cc5abf1330?w=1200&auto=format&fit=crop&q=80',
+    coverUrl: 'https://images.unsplash.com/photo-1517842645767-c639042777db?w=1200',
     editorId: 'cccccccc-3333-4333-c333-cccccccccccc',
     editorName: 'Elena Rocafuerte',
-    editorBio: 'Crítica cultural y editora especializada en periodismo narrativo y crónica urbana.',
     editorAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
-    editorRole: 'Editora Principal',
-    membersCount: 68,
-    tags: ['Crónica Urbana', 'Memoria', 'Oficios Perdidos', 'Ciudad', 'No-Ficción'],
+    description: 'Relatos de inmersión, archivo oral y no-ficción sobre la memoria urbana y corporal.',
+    manifesto: 'La crónica no es un adorno de los hechos; es el testimonio obstinado de quienes habitan el margen de los registros oficiales. Buscamos textos que conjuguen el rigor etnográfico con una prosa poética y despiadada.',
+    memberCount: 28,
+    articleCount: 14,
+  },
+  'ensayo-medico': {
+    id: '33333333-3333-3333-3333-333333333333',
+    name: 'Ensayo Médico',
+    slug: 'ensayo-medico',
+    coverUrl: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=1200',
+    editorId: 'cccccccc-3333-4333-c333-cccccccccccc',
+    editorName: 'Elena Rocafuerte',
+    editorAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
+    description: 'Humanidades médicas, bioética y reflexiones sobre la práctica clínica y hospitalaria.',
+    manifesto: 'Entre el síntoma biológico y el sufrimiento existencial media la palabra. Este círculo reúne indagaciones sobre el acto de curar, el límite terapéutico y la escucha como herramienta diagnóstica fundamental.',
+    memberCount: 42,
+    articleCount: 19,
   },
   'resena-literaria': {
     id: '11111111-1111-1111-1111-111111111111',
     name: 'Reseña Literaria',
     slug: 'resena-literaria',
-    description: 'Análisis riguroso, crítica de novedades editoriales y relecturas de obras canónicas hispanoamericanas bajo la mirada contemporánea.',
-    longDescription: 'Espacio dedicado a la crítica literaria de fondo, la exégesis poética y el rescate de obras olvidadas del canon latinoamericano del siglo XX y XXI.',
-    coverUrl: 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=1200&auto=format&fit=crop&q=80',
+    coverUrl: 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=1200',
     editorId: 'cccccccc-3333-4333-c333-cccccccccccc',
     editorName: 'Elena Rocafuerte',
-    editorBio: 'Docente de literatura comparada y ensayista.',
     editorAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
-    editorRole: 'Editora Principal',
-    membersCount: 89,
-    tags: ['Crítica Literaria', 'Narrativa', 'Siglo XX', 'Estética', 'Poesía'],
+    description: 'Lecturas críticas, ensayos bibliográficos y diálogos con clásicos y contemporáneos.',
+    manifesto: 'Leer es reescribir con la memoria propia. Defendemos la reseña como un género ensayístico mayor, capaz de interrogar las formas y tensiones del presente a través de la literatura.',
+    memberCount: 35,
+    articleCount: 22,
   },
 };
 
@@ -201,11 +215,12 @@ export const INITIAL_ARTICLES: CircleArticleItem[] = [
     authorId: 'bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb',
     authorName: 'Dr. Julián Sotomayor',
     authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-    excerpt: 'En la guardia nocturna, el silencio de un paciente suele ser más elocuente que cualquier estudio tomográfico. La escucha como el diagnóstico más riguroso.',
+    excerpt: 'En la guardia nocturna, el silencio de un paciente suele ser más elocuente que cualquier estudio tomográfico. La medicina moderna nos ha adiestrado para confiar ciegamente en el biomarcador...',
     readingTimeMin: 7,
     status: 'published',
     tags: ['Medicina Narrativa', 'Bioética', 'Guardias Clínicas', 'Humanismo'],
     createdAt: '1 de Septiembre, 2026',
+    coverUrl: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=800',
   },
   {
     id: '44444444-4444-4444-4444-444444444442',
@@ -217,11 +232,12 @@ export const INITIAL_ARTICLES: CircleArticleItem[] = [
     authorId: 'bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb',
     authorName: 'Dr. Julián Sotomayor',
     authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-    excerpt: 'A las cuatro y cuarto de la madrugada, los rieles de la terminal sur emiten un chirrido metálico que parece venir de otro siglo. Carlos limpia el parabrisas empañado...',
+    excerpt: 'Durante cuarenta años, don Amador condujo la línea 4 en el turno de las 3:30 AM. Entre el chirrido de los rieles congelados y el vapor del termo, vio nacer y desaparecer una ciudad subterránea.',
     readingTimeMin: 9,
     status: 'published',
-    tags: ['Crónica Urbana', 'Memoria', 'Oficios Perdidos', 'Ciudad'],
+    tags: ['Crónica Urbana', 'Oficios Perdidos', 'Ciudad', 'Memoria'],
     createdAt: '28 de Agosto, 2026',
+    coverUrl: 'https://images.unsplash.com/photo-1517842645767-c639042777db?w=800',
   },
   {
     id: '44444444-4444-4444-4444-444444444443',
@@ -238,6 +254,7 @@ export const INITIAL_ARTICLES: CircleArticleItem[] = [
     status: 'published',
     tags: ['Crítica Literaria', 'Narrativa', 'Siglo XX', 'Estética'],
     createdAt: '24 de Agosto, 2026',
+    coverUrl: 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=800',
   },
   {
     id: '44444444-4444-4444-4444-444444444444',
@@ -385,16 +402,14 @@ export const INITIAL_INVITATIONS: Record<string, CircleInvitationItem[]> = {
 };
 
 // ==============================================================================
-// MOCK DATA: SLOTS DE DISPONIBILIDAD (30 MINUTOS) & RESERVAS DE SESIONES
+// MOCK DATA: SLOTS DE DISPONIBILIDAD (30 MINUTOS) & RESERVAS
 // ==============================================================================
 
-// Fechas relativas en UTC para asegurar que siempre haya sesiones hoy y en los próximos días
 const todayIso = new Date().toISOString().split('T')[0];
 const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
 const dayAfter = new Date(Date.now() + 172800000).toISOString().split('T')[0];
 
 export let INITIAL_SLOTS: AvailabilitySlotItem[] = [
-  // Sesiones de hoy (Dr. Julián Sotomayor)
   {
     id: 'slot-today-1',
     authorId: 'bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb',
@@ -428,7 +443,6 @@ export let INITIAL_SLOTS: AvailabilitySlotItem[] = [
     isBooked: false,
     createdAt: '2026-09-01T00:00:00.000Z',
   },
-  // Sesiones de mañana (Dr. Julián Sotomayor)
   {
     id: 'slot-tmrw-1',
     authorId: 'bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb',
@@ -451,7 +465,6 @@ export let INITIAL_SLOTS: AvailabilitySlotItem[] = [
     isBooked: false,
     createdAt: '2026-09-01T00:00:00.000Z',
   },
-  // Sesiones de Elena Rocafuerte (Editora / Autora)
   {
     id: 'slot-elena-1',
     authorId: 'cccccccc-3333-4333-c333-cccccccccccc',
@@ -524,7 +537,86 @@ export let INITIAL_BOOKINGS: BookingSessionItem[] = [
 ];
 
 // ==============================================================================
-// RPCs ATÓMICAS & HELPERS DE CONSULTA
+// MOCK DATA: BOOKMARKS (GUARDAR PARA DESPUÉS)
+// ==============================================================================
+
+export let INITIAL_BOOKMARKS: string[] = [
+  '44444444-4444-4444-4444-444444444441', // El peso de la palabra no dicha
+];
+
+// ==============================================================================
+// MOCK DATA: COMENTARIOS ANIDADOS & MODERACIÓN
+// ==============================================================================
+
+export let INITIAL_COMMENTS: CommentItem[] = [
+  {
+    id: 'comm-1',
+    articleSlug: 'el-peso-de-la-palabra-no-dicha',
+    userId: 'aaaaaaaa-1111-4111-a111-aaaaaaaaaaaa',
+    userName: 'Sofía Valenzuela',
+    userAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+    userRole: 'reader',
+    parentId: null,
+    content: 'Este ensayo toca una fibra muy profunda. Me recordó una cita de Rita Charon sobre cómo la medicina narrativa no reemplaza la bioquímica, sino que le devuelve su propósito ontológico y ético.',
+    isHidden: false,
+    createdAt: 'Hace 2 días',
+    replies: [
+      {
+        id: 'comm-1-1',
+        articleSlug: 'el-peso-de-la-palabra-no-dicha',
+        userId: 'bbbbbbbb-2222-4222-b222-bbbbbbbbbbbb',
+        userName: 'Dr. Julián Sotomayor',
+        userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+        userRole: 'author',
+        parentId: 'comm-1',
+        content: '¡Exactamente, Sofía! Charon dio en el clavo. Sin el relato y la autobiografía del paciente, el diagnóstico se vuelve pura estadística desprovista de sentido existencial.',
+        isHidden: false,
+        createdAt: 'Hace 1 día',
+      },
+      {
+        id: 'comm-1-2',
+        articleSlug: 'el-peso-de-la-palabra-no-dicha',
+        userId: 'cccccccc-3333-4333-c333-cccccccccccc',
+        userName: 'Elena Rocafuerte',
+        userAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
+        userRole: 'editor',
+        parentId: 'comm-1',
+        content: 'Es precisamente el valor que buscamos en el Círculo de Ensayo Médico: rescatar la voz clínica como un documento estético y ético.',
+        isHidden: false,
+        createdAt: 'Hace 14 horas',
+      },
+    ],
+  },
+  {
+    id: 'comm-2',
+    articleSlug: 'el-peso-de-la-palabra-no-dicha',
+    userId: 'user-troll',
+    userName: 'Usuario Anónimo',
+    userAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+    userRole: 'reader',
+    parentId: null,
+    content: 'La medicina es solo ciencia dura y algoritmos, la literatura no sirve para curar una neumonía.',
+    isHidden: true, // Moderado por editor
+    createdAt: 'Hace 3 días',
+    replies: [],
+  },
+  {
+    id: 'comm-3',
+    articleSlug: 'madrugadas-en-el-tranvia-fantasma',
+    userId: 'aaaaaaaa-1111-4111-a111-aaaaaaaaaaaa',
+    userName: 'Sofía Valenzuela',
+    userAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+    userRole: 'reader',
+    parentId: null,
+    content: 'La atmósfera nocturna está lograda con una maestría sensorial impecable. Se puede oler el óxido y el café recalentado en el termo de don Amador.',
+    isHidden: false,
+    createdAt: 'Hace 3 días',
+    replies: [],
+  },
+];
+
+// ==============================================================================
+// HELPERS Y FUNCIONES DE ACCESO A DATOS
 // ==============================================================================
 
 export function getCircleBySlug(slug: string): CircleDetail | null {
@@ -574,10 +666,103 @@ export function getBookingsByReader(readerId: string): BookingSessionItem[] {
   );
 }
 
-/**
- * Simulación de RPC Atómica en PostgreSQL: book_slot_atomic
- * Incorpora bloqueo FOR UPDATE y protección ante Race Conditions
- */
+// ------------------------------------------------------------------------------
+// BOOKMARKS HELPERS
+// ------------------------------------------------------------------------------
+
+export function isArticleBookmarked(articleId: string): boolean {
+  return INITIAL_BOOKMARKS.includes(articleId);
+}
+
+export async function toggleBookmarkMock(articleId: string): Promise<{ isBookmarked: boolean }> {
+  const index = INITIAL_BOOKMARKS.indexOf(articleId);
+  if (index > -1) {
+    INITIAL_BOOKMARKS.splice(index, 1);
+    return { isBookmarked: false };
+  } else {
+    INITIAL_BOOKMARKS.push(articleId);
+    return { isBookmarked: true };
+  }
+}
+
+export function getBookmarkedArticles(): CircleArticleItem[] {
+  return INITIAL_ARTICLES.filter((a) => INITIAL_BOOKMARKS.includes(a.id));
+}
+
+// ------------------------------------------------------------------------------
+// COMMENTS & MODERATION HELPERS
+// ------------------------------------------------------------------------------
+
+export function getCommentsByArticleSlug(slug: string): CommentItem[] {
+  return INITIAL_COMMENTS.filter((c) => c.articleSlug === slug && c.parentId === null);
+}
+
+export async function addCommentMock(
+  articleSlug: string,
+  content: string,
+  parentId: string | null = null,
+  user?: { id: string; name: string; avatar: string; role: 'reader' | 'author' | 'editor' }
+): Promise<CommentItem> {
+  const authorInfo = user || {
+    id: 'aaaaaaaa-1111-4111-a111-aaaaaaaaaaaa',
+    name: 'Sofía Valenzuela',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+    role: 'reader' as const,
+  };
+
+  const newComment: CommentItem = {
+    id: `comm-${Date.now()}`,
+    articleSlug,
+    userId: authorInfo.id,
+    userName: authorInfo.name,
+    userAvatar: authorInfo.avatar,
+    userRole: authorInfo.role,
+    parentId: parentId || null,
+    content,
+    isHidden: false,
+    createdAt: 'Hace un instante',
+    replies: [],
+  };
+
+  if (parentId) {
+    const parentComment = INITIAL_COMMENTS.find((c) => c.id === parentId);
+    if (parentComment) {
+      if (!parentComment.replies) parentComment.replies = [];
+      parentComment.replies.push(newComment);
+    }
+  } else {
+    INITIAL_COMMENTS.push(newComment);
+  }
+
+  return newComment;
+}
+
+export async function toggleModerateCommentMock(
+  commentId: string,
+  shouldHide: boolean
+): Promise<{ success: boolean; isHidden: boolean }> {
+  // Buscar en comentarios principales
+  for (const c of INITIAL_COMMENTS) {
+    if (c.id === commentId) {
+      c.isHidden = shouldHide;
+      return { success: true, isHidden: shouldHide };
+    }
+    if (c.replies) {
+      for (const r of c.replies) {
+        if (r.id === commentId) {
+          r.isHidden = shouldHide;
+          return { success: true, isHidden: shouldHide };
+        }
+      }
+    }
+  }
+  return { success: false, isHidden: false };
+}
+
+// ------------------------------------------------------------------------------
+// RPCs ATÓMICAS (AGENDAMIENTO)
+// ------------------------------------------------------------------------------
+
 export async function bookSlotAtomicMock(
   slotId: string,
   readerId: string,
@@ -585,7 +770,6 @@ export async function bookSlotAtomicMock(
   notes?: string,
   simulateRaceCondition = false
 ): Promise<{ success: boolean; bookingId?: string; message: string; errorCode?: string }> {
-  // Simular latencia de red/base de datos
   await new Promise((resolve) => setTimeout(resolve, 600));
 
   const slotIndex = INITIAL_SLOTS.findIndex((s) => s.id === slotId);
@@ -599,7 +783,6 @@ export async function bookSlotAtomicMock(
 
   const slot = INITIAL_SLOTS[slotIndex];
 
-  // Simulación de Race Condition o doble reserva concurrente
   if (slot.isBooked || simulateRaceCondition) {
     return {
       success: false,
@@ -608,7 +791,6 @@ export async function bookSlotAtomicMock(
     };
   }
 
-  // 1. Marcar slot como reservado
   INITIAL_SLOTS[slotIndex] = { ...slot, isBooked: true };
 
   const reader = INITIAL_AUTHORS[readerId] || {
@@ -653,10 +835,6 @@ export async function bookSlotAtomicMock(
   };
 }
 
-/**
- * Simulación de RPC Atómica en PostgreSQL: cancel_booking_atomic
- * Aplica regla estricta de 2 horas de anticipación
- */
 export async function cancelBookingAtomicMock(
   bookingId: string,
   userId: string
@@ -674,7 +852,6 @@ export async function cancelBookingAtomicMock(
 
   const booking = INITIAL_BOOKINGS[bookingIndex];
 
-  // Verificar regla de 2 horas
   const startMillis = new Date(booking.startTime).getTime();
   const diffHours = (startMillis - Date.now()) / (1000 * 60 * 60);
 
@@ -686,10 +863,8 @@ export async function cancelBookingAtomicMock(
     };
   }
 
-  // Actualizar estado de la reserva
   INITIAL_BOOKINGS[bookingIndex] = { ...booking, status: 'cancelled' };
 
-  // Liberar el slot asociado
   const slotIndex = INITIAL_SLOTS.findIndex((s) => s.id === booking.slotId);
   if (slotIndex !== -1) {
     INITIAL_SLOTS[slotIndex] = { ...INITIAL_SLOTS[slotIndex], isBooked: false };
@@ -701,9 +876,6 @@ export async function cancelBookingAtomicMock(
   };
 }
 
-/**
- * Crear nuevo bloque de 30 minutos
- */
 export async function createSlotMock(
   authorId: string,
   startTimeIso: string,
@@ -726,9 +898,6 @@ export async function createSlotMock(
   return newSlot;
 }
 
-/**
- * Eliminar bloque de disponibilidad
- */
 export async function deleteSlotMock(slotId: string): Promise<boolean> {
   const initialLength = INITIAL_SLOTS.length;
   INITIAL_SLOTS = INITIAL_SLOTS.filter((s) => s.id !== slotId);

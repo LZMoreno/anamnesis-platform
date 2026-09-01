@@ -8,12 +8,14 @@ import {
   Calendar,
   CalendarCheck,
   ChevronRight,
+  Compass,
   Edit3,
   Feather,
   Layers,
   LogIn,
   Menu,
   PenTool,
+  Search,
   Sparkles,
   User,
   Users,
@@ -35,9 +37,10 @@ export function Navbar() {
 
   const navLinks = [
     { href: '/', label: 'Inicio', icon: Sparkles },
+    { href: '/explorar', label: 'Explorar & Búsqueda', icon: Compass },
     { href: '/circulo/cronica', label: 'Crónica', icon: Feather },
     { href: '/circulo/ensayo-medico', label: 'Ensayo Médico', icon: BookOpen },
-    { href: '/agenda', label: 'Agenda & Citas (30m)', icon: Calendar },
+    { href: '/agenda', label: 'Agenda & Citas', icon: Calendar },
     {
       href: '/dashboard/autor/disponibilidad',
       label: 'Mi Día & Slots',
@@ -74,13 +77,14 @@ export function Navbar() {
               const isActive =
                 pathname === link.href ||
                 (link.href === '/editor/nuevo' && pathname.startsWith('/editor')) ||
-                (link.href === '/dashboard/autor/disponibilidad' && pathname.startsWith('/dashboard/autor'));
+                (link.href === '/dashboard/autor/disponibilidad' && pathname.startsWith('/dashboard/autor')) ||
+                (link.href === '/explorar' && pathname.startsWith('/explorar'));
               return (
                 <Link
                   key={link.href}
                   href={link.href}
                   className={cn(
-                    'flex items-center gap-1.5 px-3 py-2 min-h-[44px] text-xs font-medium rounded-lg transition-colors',
+                    'flex items-center gap-1.5 px-2.5 py-2 min-h-[44px] text-xs font-medium rounded-lg transition-colors',
                     isActive
                       ? 'bg-accent text-accent-foreground font-semibold'
                       : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
@@ -155,7 +159,8 @@ export function Navbar() {
               const isActive =
                 pathname === link.href ||
                 (link.href === '/editor/nuevo' && pathname.startsWith('/editor')) ||
-                (link.href === '/dashboard/autor/disponibilidad' && pathname.startsWith('/dashboard/autor'));
+                (link.href === '/dashboard/autor/disponibilidad' && pathname.startsWith('/dashboard/autor')) ||
+                (link.href === '/explorar' && pathname.startsWith('/explorar'));
               return (
                 <Link
                   key={link.href}
