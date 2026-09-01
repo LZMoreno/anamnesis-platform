@@ -29,6 +29,14 @@ import { cn } from '@/lib/utils';
 export function Navbar() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [currentRole, setCurrentRole] = React.useState<string>('reader');
+
+  React.useEffect(() => {
+    const match = document.cookie.match(/anamnesis_demo_role=([^;]+)/);
+    if (match) {
+      setCurrentRole(match[1]);
+    }
+  }, [pathname]);
 
   // Cerrar menú móvil al cambiar de ruta
   React.useEffect(() => {
@@ -37,21 +45,22 @@ export function Navbar() {
 
   const navLinks = [
     { href: '/', label: 'Inicio', icon: Sparkles },
-    { href: '/explorar', label: 'Explorar & Búsqueda', icon: Compass },
-    { href: '/circulo/cronica', label: 'Crónica', icon: Feather },
-    { href: '/circulo/ensayo-medico', label: 'Ensayo Médico', icon: BookOpen },
-    { href: '/agenda', label: 'Agenda & Citas', icon: Calendar },
+    { href: '/circulos', label: 'Círculos', icon: Layers },
+    { href: '/explorar', label: 'Explorar', icon: Compass },
+    { href: '/agenda', label: 'Agenda (30m)', icon: Calendar },
     {
       href: '/dashboard/autor/disponibilidad',
-      label: 'Mi Día & Slots',
+      label: 'Mi Día',
       icon: CalendarCheck,
     },
     {
       href: '/editor/nuevo',
-      label: 'Editor TipTap',
+      label: 'Redactar',
       icon: PenTool,
     },
   ];
+
+  const isEditor = currentRole === 'editor';
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/90 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 transition-colors">
@@ -78,6 +87,7 @@ export function Navbar() {
                 pathname === link.href ||
                 (link.href === '/editor/nuevo' && pathname.startsWith('/editor')) ||
                 (link.href === '/dashboard/autor/disponibilidad' && pathname.startsWith('/dashboard/autor')) ||
+                (link.href === '/circulos' && pathname.startsWith('/circulos')) ||
                 (link.href === '/explorar' && pathname.startsWith('/explorar'));
               return (
                 <Link
@@ -105,27 +115,30 @@ export function Navbar() {
           </div>
           <ThemeToggle />
 
-          <Link href="/editor/nuevo" className="hidden sm:inline-block">
+          <Link href="/login" className="hidden sm:inline-block">
             <Button
               variant="outline"
-              className="min-h-[44px] gap-1.5 text-xs font-medium px-3 border-primary/40 text-primary hover:bg-primary/10"
+              className="min-h-[44px] gap-1.5 text-xs font-medium px-3 border-border/80 hover:bg-accent"
+              title="Iniciar sesión o registrar cuenta"
             >
-              <PenTool className="w-4 h-4" />
-              <span>Redactar</span>
+              <User className="w-4 h-4 text-primary" />
+              <span>Cuenta</span>
             </Button>
           </Link>
 
-          <Link
-            href="/circulo/cronica/editor"
-            className="hidden md:inline-block"
-          >
-            <Button
-              className="min-h-[44px] gap-1.5 text-xs font-medium bg-primary hover:bg-primary/90 px-3.5"
+          {isEditor && (
+            <Link
+              href="/circulo/cronica/editor"
+              className="hidden md:inline-block"
             >
-              <Edit3 className="w-4 h-4" />
-              <span>Mesa Editorial</span>
-            </Button>
-          </Link>
+              <Button
+                className="min-h-[44px] gap-1.5 text-xs font-medium bg-primary hover:bg-primary/90 px-3.5"
+              >
+                <Edit3 className="w-4 h-4" />
+                <span>Mesa Editorial</span>
+              </Button>
+            </Link>
+          )}
 
           {/* Mobile Hamburger Toggle Button (min 44x44px touch target) */}
           <button
@@ -160,6 +173,7 @@ export function Navbar() {
                 pathname === link.href ||
                 (link.href === '/editor/nuevo' && pathname.startsWith('/editor')) ||
                 (link.href === '/dashboard/autor/disponibilidad' && pathname.startsWith('/dashboard/autor')) ||
+                (link.href === '/circulos' && pathname.startsWith('/circulos')) ||
                 (link.href === '/explorar' && pathname.startsWith('/explorar'));
               return (
                 <Link
@@ -180,6 +194,17 @@ export function Navbar() {
                 </Link>
               );
             })}
+
+            <Link
+              href="/login"
+              className="flex items-center justify-between px-3 py-3 min-h-[44px] text-sm font-medium rounded-lg text-muted-foreground hover:bg-accent/40 hover:text-foreground transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <User className="w-4 h-4 text-primary" />
+                <span>Iniciar Sesión / Cuenta</span>
+              </div>
+              <ChevronRight className="w-4 h-4 opacity-50" />
+            </Link>
           </nav>
 
           <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/40">
@@ -191,13 +216,23 @@ export function Navbar() {
                 <CalendarCheck className="w-4 h-4" /> Mi Día & Slots
               </Button>
             </Link>
-            <Link href="/circulo/cronica/editor" className="w-full">
-              <Button
-                className="w-full min-h-[44px] gap-2 text-xs font-medium bg-primary hover:bg-primary/90"
-              >
-                <Edit3 className="w-4 h-4" /> Mesa Editorial
-              </Button>
-            </Link>
+            {isEditor ? (
+              <Link href="/circulo/cronica/editor" className="w-full">
+                <Button
+                  className="w-full min-h-[44px] gap-2 text-xs font-medium bg-primary hover:bg-primary/90"
+                >
+                  <Edit3 className="w-4 h-4" /> Mesa Editorial
+                </Button>
+              </Link>
+            ) : (
+              <Link href="/circulos" className="w-full">
+                <Button
+                  className="w-full min-h-[44px] gap-2 text-xs font-medium bg-primary hover:bg-primary/90"
+                >
+                  <Layers className="w-4 h-4" /> Ver Círculos
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       )}

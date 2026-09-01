@@ -8,10 +8,12 @@ import {
   ArrowRight,
   BookOpen,
   Calendar,
+  CheckCircle2,
   Clock,
   Edit3,
   Feather,
   Plus,
+  Send,
   Shield,
   Sparkles,
   Tag,
@@ -34,11 +36,22 @@ interface CirclePageProps {
 export default function CirclePage({ params }: CirclePageProps) {
   const circle = getCircleBySlug(params.slug);
 
+  const [currentRole, setCurrentRole] = React.useState<string>('reader');
+  const [joined, setJoined] = React.useState(false);
+
+  React.useEffect(() => {
+    const match = document.cookie.match(/anamnesis_demo_role=([^;]+)/);
+    if (match) {
+      setCurrentRole(match[1]);
+    }
+  }, []);
+
   if (!circle) {
     notFound();
   }
 
   const circleArticles = INITIAL_ARTICLES.filter((a) => a.circleSlug === params.slug && a.status === 'published');
+  const isEditor = currentRole === 'editor';
 
   return (
     <div className="w-full max-w-full overflow-x-hidden pb-20">
@@ -56,10 +69,10 @@ export default function CirclePage({ params }: CirclePageProps) {
           <div className="container mx-auto max-w-6xl px-3 sm:px-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="space-y-2 max-w-3xl">
               <Link
-                href="/"
+                href="/circulos"
                 className="inline-flex items-center gap-1.5 min-h-[44px] text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
-                <ArrowLeft className="w-4 h-4" /> Volver al Inicio
+                <ArrowLeft className="w-4 h-4" /> Ver Todos los Círculos
               </Link>
 
               <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -67,7 +80,7 @@ export default function CirclePage({ params }: CirclePageProps) {
                   Círculo Editorial
                 </Badge>
                 <Badge variant="outline" className="bg-background/60 backdrop-blur text-xs">
-                  {circle.memberCount} Miembros
+                  {circle.memberCount + (joined ? 1 : 0)} Miembros
                 </Badge>
               </div>
 
@@ -80,30 +93,57 @@ export default function CirclePage({ params }: CirclePageProps) {
               </p>
             </div>
 
+            {/* Action Buttons: Strict RBAC Protection for Editor Tools */}
             <div className="flex flex-wrap items-center gap-2 pt-2 md:pt-0">
-              <Link href={`/circulo/${params.slug}/editor`} className="w-full sm:w-auto">
-                <Button
-                  variant="outline"
-                  className="w-full sm:w-auto min-h-[44px] gap-2 text-xs font-medium bg-background/80 backdrop-blur hover:bg-accent"
-                >
-                  <Shield className="w-4 h-4 text-amber-500" />
-                  Mesa Editorial
-                </Button>
-              </Link>
-              <Link href={`/circulo/${params.slug}/editor/members`} className="w-full sm:w-auto">
-                <Button
-                  variant="secondary"
-                  className="w-full sm:w-auto min-h-[44px] gap-2 text-xs font-medium"
-                >
-                  <Users className="w-4 h-4" />
-                  Gestionar Miembros
-                </Button>
-              </Link>
+              {isEditor ? (
+                <>
+                  <Link href={`/circulo/${params.slug}/editor`} className="w-full sm:w-auto">
+                    <Button
+                      variant="outline"
+                      className="w-full sm:w-auto min-h-[44px] gap-2 text-xs font-medium bg-background/80 backdrop-blur hover:bg-accent border-amber-500/40 text-amber-600 dark:text-amber-400"
+                    >
+                      <Shield className="w-4 h-4 text-amber-500" />
+                      Mesa Editorial
+                    </Button>
+                  </Link>
+                  <Link href={`/circulo/${params.slug}/editor/members`} className="w-full sm:w-auto">
+                    <Button
+                      variant="secondary"
+                      className="w-full sm:w-auto min-h-[44px] gap-2 text-xs font-medium"
+                    >
+                      <Users className="w-4 h-4" />
+                      Gestionar Miembros
+                    </Button>
+                  </Link>
+                </>
+              ) : currentRole === 'author' ? (
+                <Link href="/editor/nuevo" className="w-full sm:w-auto">
+                  <Button
+                    variant="outline"
+                    className="w-full sm:w-auto min-h-[44px] gap-2 text-xs font-medium bg-background/80 backdrop-blur"
+                  >
+                    <Send className="w-4 h-4 text-primary" />
+                    Enviar Manuscrito
+                  </Button>
+                </Link>
+              ) : null}
+
               <Button
-                className="w-full sm:w-auto min-h-[44px] gap-2 text-xs font-medium bg-primary hover:bg-primary/90"
+                onClick={() => setJoined(!joined)}
+                variant={joined ? 'secondary' : 'default'}
+                className="w-full sm:w-auto min-h-[44px] gap-2 text-xs font-medium"
               >
-                <UserPlus className="w-4 h-4" />
-                Unirse al Círculo
+                {joined ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    Miembro del Círculo
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-4 h-4" />
+                    Unirse al Círculo
+                  </>
+                )}
               </Button>
             </div>
           </div>

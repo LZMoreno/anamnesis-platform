@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   Clock,
   FileText,
+  Lock,
   Mail,
   MoreVertical,
   Plus,
@@ -40,6 +41,7 @@ export default function CircleMembersEditorPage() {
   const slug = (params.slug as string) || 'cronica';
   const circle = getCircleBySlug(slug);
 
+  const [currentRole, setCurrentRole] = React.useState<string | null>(null);
   const [members, setMembers] = React.useState<CircleMemberItem[]>([]);
   const [invitations, setInvitations] = React.useState<CircleInvitationItem[]>([]);
   const [inviteEmail, setInviteEmail] = React.useState('');
@@ -52,9 +54,51 @@ export default function CircleMembersEditorPage() {
   const [searchTerm, setSearchTerm] = React.useState('');
 
   React.useEffect(() => {
+    const match = document.cookie.match(/anamnesis_demo_role=([^;]+)/);
+    const role = match ? match[1] : 'reader';
+    setCurrentRole(role);
+
     setMembers(getCircleMembers(slug));
     setInvitations(getCircleInvitations(slug));
   }, [slug]);
+
+  // Estricto Guard de Rol: Si es Lector o Autor no editor, bloquear acceso totalmente
+  if (currentRole !== null && currentRole !== 'editor') {
+    return (
+      <div className="w-full max-w-full overflow-x-hidden pb-20">
+        <div className="container mx-auto max-w-lg px-4 py-16 sm:py-24 text-center space-y-6">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+            <ShieldAlert className="h-8 w-8" />
+          </div>
+
+          <div className="space-y-2">
+            <h1 className="font-serif text-3xl font-bold tracking-tight">
+              403 • Acceso Restringido
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              La Gestión de Miembros e Invitaciones de <strong>{circle?.name || 'este círculo'}</strong> es de uso exclusivo para la Mesa Editorial. Tu rol actual (<strong>{currentRole === 'author' ? 'Autor' : 'Lector'}</strong>) no tiene autorización para emitir ni revocar credenciales.
+            </p>
+          </div>
+
+          <div className="rounded-xl bg-muted/40 p-4 text-xs text-muted-foreground border border-border/40 text-left space-y-2">
+            <div className="font-semibold text-foreground flex items-center gap-1.5">
+              <Lock className="w-4 h-4 text-amber-500" /> Control de Acceso por Rol:
+            </div>
+            <p>• Los lectores y autores generales no pueden invitar miembros ni revocar accesos en círculos.</p>
+            <p>• Para gestionar este círculo, activa el rol <strong>Editor</strong> en el simulador superior.</p>
+          </div>
+
+          <div className="flex justify-center gap-3 pt-2">
+            <Link href={`/circulo/${slug}`}>
+              <Button className="min-h-[44px] gap-2 text-xs font-medium bg-primary hover:bg-primary/90 px-6">
+                <ArrowLeft className="w-4 h-4" /> Volver al Círculo
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleSendInvite = (e: React.FormEvent) => {
     e.preventDefault();

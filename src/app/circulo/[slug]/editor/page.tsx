@@ -1,5 +1,8 @@
+'use client';
+
+import * as React from 'react';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, useRouter } from 'next/navigation';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -7,8 +10,10 @@ import {
   Edit,
   Eye,
   FileText,
+  Lock,
   Plus,
   Shield,
+  ShieldAlert,
   Users,
 } from 'lucide-react';
 import { getCircleBySlug, INITIAL_MEMBERS } from '@/lib/data/mock-db';
@@ -23,10 +28,56 @@ interface EditorPageProps {
 }
 
 export default function CircleEditorPage({ params }: EditorPageProps) {
+  const router = useRouter();
   const circle = getCircleBySlug(params.slug);
+  const [currentRole, setCurrentRole] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const match = document.cookie.match(/anamnesis_demo_role=([^;]+)/);
+    const role = match ? match[1] : 'reader';
+    setCurrentRole(role);
+  }, []);
 
   if (!circle) {
     notFound();
+  }
+
+  // Estricto Guard de Rol: Si es Lector o Autor no editor, bloquear acceso totalmente
+  if (currentRole !== null && currentRole !== 'editor') {
+    return (
+      <div className="w-full max-w-full overflow-x-hidden pb-20">
+        <div className="container mx-auto max-w-lg px-4 py-16 sm:py-24 text-center space-y-6">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+            <ShieldAlert className="h-8 w-8" />
+          </div>
+
+          <div className="space-y-2">
+            <h1 className="font-serif text-3xl font-bold tracking-tight">
+              403 • Acceso Denegado
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              La Mesa Editorial de <strong>{circle.name}</strong> es un espacio privado. Tu rol actual (<strong>{currentRole === 'author' ? 'Autor' : 'Lector'}</strong>) no posee permisos de administración para este círculo.
+            </p>
+          </div>
+
+          <div className="rounded-xl bg-muted/40 p-4 text-xs text-muted-foreground border border-border/40 text-left space-y-2">
+            <div className="font-semibold text-foreground flex items-center gap-1.5">
+              <Lock className="w-4 h-4 text-amber-500" /> Política de Seguridad RLS:
+            </div>
+            <p>• Los lectores nunca tienen acceso a la cola de borradores ni a la gestión de membresías.</p>
+            <p>• Para ingresar como editor, selecciona el rol <strong>Editor</strong> en el simulador superior.</p>
+          </div>
+
+          <div className="flex justify-center gap-3 pt-2">
+            <Link href={`/circulo/${params.slug}`}>
+              <Button className="min-h-[44px] gap-2 text-xs font-medium bg-primary hover:bg-primary/90 px-6">
+                <ArrowLeft className="w-4 h-4" /> Volver a la Vista Pública
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const membersCount = (INITIAL_MEMBERS[params.slug] || []).length;
@@ -150,7 +201,7 @@ export default function CircleEditorPage({ params }: EditorPageProps) {
             <CardHeader className="p-5 pb-2">
               <CardDescription className="text-xs">Membresías del Círculo</CardDescription>
               <CardTitle className="text-2xl sm:text-3xl font-serif font-bold text-foreground">
-                {circle.membersCount}
+                {circle.memberCount}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-5 pt-0">
